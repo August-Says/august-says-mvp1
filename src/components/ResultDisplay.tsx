@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -25,33 +26,57 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         return parsed.flatMap(item => {
           const output = item.output || item.canvas || '';
           if (!output) return [];
-          return output.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
+          // Split by ### headers or bold **SECTION:** markers
+          return output.split(/(?:###\s+|\*\*(?!SECTION:))/);
         }).filter(section => section.trim());
       } else if (typeof parsed === 'object' && (parsed.output || parsed.canvas)) {
         const output = parsed.output || parsed.canvas;
-        return output.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
+        return output.split(/(?:###\s+|\*\*(?!SECTION:))/);
       }
     } catch (e) {
-      return content.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
+      // If not JSON, split by markdown headers or bold section markers
+      return content.split(/(?:###\s+|\*\*(?!SECTION:))/);
     }
     return [content];
   };
 
   const getSectionTitle = (section: string, index: number): string => {
-    const sectionTypes = {
-      summary: 'Summary',
-      question: 'Question',
-      outcome: 'Outcome',
-      'strategic implications': 'Strategic Implications'
-    };
-
-    const sectionContent = section.toLowerCase();
-    for (const [key, value] of Object.entries(sectionTypes)) {
-      if (sectionContent.includes(key)) {
-        return value;
-      }
+    // Extract the actual title from the section content
+    const lines = section.trim().split('\n');
+    const firstLine = lines[0].trim();
+    
+    // Check if the section starts with a recognized title pattern
+    if (firstLine.toUpperCase().includes('SUMMARY:')) {
+      return 'Summary';
+    } else if (firstLine.toUpperCase().includes('OBJECTIVE:')) {
+      return 'Objective';
+    } else if (firstLine.toUpperCase().includes('THE OUTCOME:')) {
+      return 'The Outcome';
+    } else if (firstLine.toUpperCase().includes('STRATEGIC IMPLICATIONS:')) {
+      return 'Strategic Implications';
+    } else if (firstLine.toUpperCase().includes('QUESTION:')) {
+      return 'Question';
     }
+    
+    // If no title pattern is found in the first line, use a generic section title
     return `Section ${index + 1}`;
+  };
+  
+  // Clean section content by removing the title part
+  const cleanSectionContent = (section: string): string => {
+    const lines = section.trim().split('\n');
+    const firstLine = lines[0].trim();
+    
+    // If the first line contains a title pattern, remove it
+    if (firstLine.includes('SUMMARY:') || 
+        firstLine.includes('OBJECTIVE:') ||
+        firstLine.includes('THE OUTCOME:') ||
+        firstLine.includes('STRATEGIC IMPLICATIONS:') ||
+        firstLine.includes('QUESTION:')) {
+      return lines.slice(1).join('\n').trim();
+    }
+    
+    return section.trim();
   };
 
   const processedResult = result;
@@ -88,8 +113,10 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
       <div className="space-y-8 text-white/90">
         {sections.length > 0 ? (
           sections.map((section, index) => {
+            if (!section.trim()) return null;
+            
             const title = getSectionTitle(section, index);
-            const content = section.trim();
+            const content = cleanSectionContent(section);
             
             return (
               <motion.div 
