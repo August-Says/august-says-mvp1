@@ -1,17 +1,28 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import ResultDisplay from '@/components/ResultDisplay';
 import PdfUploadForm from '@/components/pdf/PdfUploadForm';
 import { useWebhookSubmission } from '@/hooks/useWebhookSubmission';
+import { toast } from 'sonner';
 
 const PdfUpload = () => {
   const navigate = useNavigate();
-  const { isLoading, result, setResult, callWebhook } = useWebhookSubmission({
-    fallbackGenerator: (content: string) => generateFallbackCanvas(content)
+  const [textContent, setTextContent] = useState('');
+  const { 
+    isLoading, 
+    result, 
+    setResult, 
+    callWebhook,
+    navigateHistory,
+    canGoBack,
+    canGoForward,
+    currentHistoryEntry
+  } = useWebhookSubmission({
+    fallbackGenerator: generateFallbackCanvas
   });
 
   const generateFallbackCanvas = (content: string) => {
@@ -67,13 +78,20 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
   
   const handleFormSubmit = async (content: string, type: 'upload' | 'text') => {
     const params: Record<string, string> = {};
+    setTextContent(content);
     
     if (type === 'text') {
       await callWebhook(params, 'textContent', content);
     } else {
-      // For PDF upload
       params.pdfUploaded = 'true';
       await callWebhook(params);
+    }
+  };
+
+  const handleHistoryNavigation = (direction: 'back' | 'forward') => {
+    const historyEntry = navigateHistory(direction);
+    if (historyEntry?.contentValue) {
+      setTextContent(historyEntry.contentValue);
     }
   };
   
@@ -96,6 +114,36 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
   if (result) {
     return (
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
+        <div className="max-w-4xl mx-auto mb-4 flex justify-between items-center">
+          <Button 
+            onClick={handleBack} 
+            variant="ghost" 
+            className="text-white/80 hover:text-white hover:bg-white/10"
+          >
+            <ArrowLeft size={18} className="mr-2" />
+            Back to Form
+          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => handleHistoryNavigation('back')}
+              variant="outline"
+              disabled={!canGoBack}
+              className="text-white border-white/20 hover:bg-white/10 disabled:opacity-50"
+            >
+              <ChevronLeft size={18} className="mr-1" />
+              Previous
+            </Button>
+            <Button
+              onClick={() => handleHistoryNavigation('forward')}
+              variant="outline"
+              disabled={!canGoForward}
+              className="text-white border-white/20 hover:bg-white/10 disabled:opacity-50"
+            >
+              Next
+              <ChevronRight size={18} className="ml-1" />
+            </Button>
+          </div>
+        </div>
         <ResultDisplay result={result} onBack={handleBack} />
       </div>
     );

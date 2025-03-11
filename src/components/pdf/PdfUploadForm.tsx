@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -11,11 +10,12 @@ import { toast } from 'sonner';
 
 interface PdfUploadFormProps {
   onSubmit: (content: string, type: 'upload' | 'text') => void;
+  initialTextContent?: string;
 }
 
-const PdfUploadForm = ({ onSubmit }: PdfUploadFormProps) => {
+const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps) => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [textContent, setTextContent] = useState('');
+  const [textContent, setTextContent] = useState(initialTextContent);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = (activeTab: 'upload' | 'text') => {
@@ -47,7 +47,6 @@ const PdfUploadForm = ({ onSubmit }: PdfUploadFormProps) => {
     if (activeTab === 'text') {
       onSubmit(textContent, 'text');
     } else {
-      // PDF file handling
       onSubmit(pdfFile?.name || 'Uploaded PDF', 'upload');
     }
   };
