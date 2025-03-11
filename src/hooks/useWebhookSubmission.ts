@@ -76,20 +76,28 @@ Detailed breakdown of primary and secondary audience segments.
       const responseText = await response.text();
       console.log('Raw response:', responseText);
       
-      // Handle the response
+      // Try to parse the response
       let data;
       try {
         data = responseText ? JSON.parse(responseText) : null;
-        console.log('Parsed response data:', data);
+        console.log('Webhook response:', data);
       } catch (parseError) {
         console.error('Failed to parse JSON response:', parseError);
-        // Just use the raw text if we can't parse it
         data = responseText;
       }
       
-      // Store the raw response - we'll process it in the ResultDisplay component
+      // Handle the response and multiple outputs
       if (data) {
-        setResult(typeof data === 'string' ? data : JSON.stringify(data));
+        if (Array.isArray(data)) {
+          // If it's an array of responses, combine their outputs
+          const combinedOutput = data
+            .map(item => item.output || item.canvas || '')
+            .join('\n\n---\n\n');
+          setResult(combinedOutput);
+        } else {
+          // Single response
+          setResult(data.output || data.canvas || JSON.stringify(data));
+        }
         toast.success('Canvas generated successfully!');
         return data;
       } else {
@@ -102,7 +110,6 @@ Detailed breakdown of primary and secondary audience segments.
     } catch (error) {
       console.error('Webhook error:', error);
       toast.error('Failed to generate canvas. Using fallback data.');
-      // Use fallback data on error
       const fallbackContent = fallbackGenerator(contentValue || '');
       setResult(fallbackContent);
       return fallbackContent;

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -19,56 +18,43 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
     toast.success('Share functionality will be available soon!');
   };
 
-  const parseResult = (result: string) => {
-    try {
-      const parsed = JSON.parse(result);
-      if (typeof parsed === 'object') {
-        return JSON.stringify(parsed, null, 2);
-      }
-      return result;
-    } catch (e) {
-      return result;
-    }
-  };
-
   const processContent = (content: string) => {
     try {
       const parsed = JSON.parse(content);
       if (Array.isArray(parsed)) {
-        // Handle array of responses (multiple webhook responses)
         return parsed.flatMap(item => {
           const output = item.output || item.canvas || '';
-          return output.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
+          if (!output) return [];
+          return output.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
         }).filter(section => section.trim());
-      } else if (typeof parsed === 'object' && parsed.output) {
-        // Handle single response with output property
-        return parsed.output.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
+      } else if (typeof parsed === 'object' && (parsed.output || parsed.canvas)) {
+        const output = parsed.output || parsed.canvas;
+        return output.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
       }
     } catch (e) {
-      console.log('Error parsing JSON:', e);
-      // If not valid JSON, process as plain text
+      return content.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
     }
-    // Default fallback - split on section markers
-    return content.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
+    return [content];
   };
 
   const getSectionTitle = (section: string, index: number): string => {
-    if (section.toLowerCase().includes('summary')) {
-      return 'Summary';
-    }
-    if (section.toLowerCase().includes('question')) {
-      return 'Question';
-    }
-    if (section.toLowerCase().includes('outcome')) {
-      return 'Outcome';
-    }
-    if (section.toLowerCase().includes('strategic implications')) {
-      return 'Strategic Implications';
+    const sectionTypes = {
+      summary: 'Summary',
+      question: 'Question',
+      outcome: 'Outcome',
+      'strategic implications': 'Strategic Implications'
+    };
+
+    const sectionContent = section.toLowerCase();
+    for (const [key, value] of Object.entries(sectionTypes)) {
+      if (sectionContent.includes(key)) {
+        return value;
+      }
     }
     return `Section ${index + 1}`;
   };
 
-  const processedResult = parseResult(result);
+  const processedResult = result;
   const sections = processContent(processedResult);
   
   return (
