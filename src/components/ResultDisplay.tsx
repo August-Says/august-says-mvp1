@@ -31,23 +31,27 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   };
 
   const processContent = (content: string) => {
-    const sections = content.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
-    return sections.filter(section => section.trim());
+    try {
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) {
+        return parsed.flatMap(item => {
+          const output = item.output || item.canvas || '';
+          return output.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
+        }).filter(section => section.trim());
+      }
+    } catch (e) {
+      return content.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
+    }
+    return content.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
   };
 
   const getSectionTitle = (section: string, index: number): string => {
-    if (index === 0) {
+    if (section.toLowerCase().includes('summary')) {
       return 'Summary';
     }
-    
-    const fullText = parseResult(result);
-    const questionIndex = fullText.indexOf('**QUESTION:**');
-    const sectionStart = fullText.indexOf(section);
-    
-    if (questionIndex !== -1 && sectionStart > questionIndex) {
+    if (section.toLowerCase().includes('question')) {
       return 'Question';
     }
-    
     return `Section ${index + 1}`;
   };
 
