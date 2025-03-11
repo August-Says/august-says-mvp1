@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -48,7 +47,6 @@ const FieldsForm = () => {
       [field]: value
     }));
     
-    // Clear error when field is changed
     if (errors[field]) {
       setErrors(prev => ({
         ...prev,
@@ -61,7 +59,6 @@ const FieldsForm = () => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
     
-    // Required fields
     const requiredFields: Array<keyof FormData> = [
       'role', 'clientName', 'clientIndustry', 'sponsored', 
       'targetAudience', 'location', 'productService', 'relationalSentiment'
@@ -74,7 +71,6 @@ const FieldsForm = () => {
       }
     });
     
-    // Conditionally required fields
     if (formData.sponsored === 'Yes Sponsored' && !formData.event) {
       newErrors.event = 'Event is required for sponsored projects';
       isValid = false;
@@ -95,11 +91,29 @@ const FieldsForm = () => {
     setIsLoading(true);
     
     try {
-      // Simulate API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      const webhookUrl = 'https://sonarai.app.n8n.cloud/webhook-test/715d27f7-f730-437c-8abe-cda82e04210e';
+      const queryParams = new URLSearchParams();
       
-      // Mocked response
-      setResult(`# Marketing Canvas for ${formData.clientName}
+      Object.entries(formData).forEach(([key, value]) => {
+        if (value) {
+          queryParams.append(key, value);
+        }
+      });
+      
+      const response = await fetch(`${webhookUrl}?${queryParams.toString()}`, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Webhook responded with status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      setResult(data.canvas || `# Marketing Canvas for ${formData.clientName}
 
 ## Executive Summary
 A strategic marketing canvas designed for ${formData.clientName} targeting ${formData.targetAudience} in ${formData.location}. This canvas focuses on ${formData.productService} with emphasis on ${formData.relationalSentiment}.
@@ -136,6 +150,7 @@ Multi-channel approach leveraging digital and traditional media to reach ${formD
       
       toast.success('Canvas generated successfully!');
     } catch (error) {
+      console.error('Webhook error:', error);
       toast.error('Failed to generate canvas. Please try again.');
     } finally {
       setIsLoading(false);
@@ -412,8 +427,9 @@ Multi-channel approach leveraging digital and traditional media to reach ${formD
           <div className="mt-8 flex justify-center">
             <Button 
               type="submit" 
-              className="bg-august-purple hover:bg-august-purple/90 text-white font-medium px-10"
+              variant="cloudai"
               size="lg"
+              className="font-medium px-10"
             >
               Generate Canvas
             </Button>
