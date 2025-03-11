@@ -31,10 +31,24 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   };
 
   const processContent = (content: string) => {
-    if (content.includes('##') || content.includes('#')) {
-      return content.split('##').filter(section => section.trim());
+    const sections = content.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
+    return sections.filter(section => section.trim());
+  };
+
+  const getSectionTitle = (section: string, index: number): string => {
+    if (index === 0) {
+      return 'Summary';
     }
-    return [content];
+    
+    const fullText = parseResult(result);
+    const questionIndex = fullText.indexOf('**QUESTION:**');
+    const sectionStart = fullText.indexOf(section);
+    
+    if (questionIndex !== -1 && sectionStart > questionIndex) {
+      return 'Question';
+    }
+    
+    return `Section ${index + 1}`;
   };
 
   const processedResult = parseResult(result);
@@ -71,21 +85,8 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
       <div className="space-y-8 text-white/90">
         {sections.length > 0 ? (
           sections.map((section, index) => {
-            let title = '';
-            let content = '';
-            
-            const lines = section.trim().split('\n');
-            
-            if (lines[0].startsWith('# ')) {
-              title = lines[0].substring(2).trim();
-              content = lines.slice(1).join('\n').trim();
-            } else if (lines[0].trim() && !lines[0].includes(':')) {
-              title = lines[0].trim();
-              content = lines.slice(1).join('\n').trim();
-            } else {
-              title = index === 0 ? 'Summary' : `Section ${index + 1}`;
-              content = section.trim();
-            }
+            const title = getSectionTitle(section, index);
+            const content = section.trim();
             
             return (
               <motion.div 
