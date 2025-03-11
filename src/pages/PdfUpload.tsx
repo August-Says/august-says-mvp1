@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -12,19 +11,7 @@ import { toast } from 'sonner';
 const PdfUpload = () => {
   const navigate = useNavigate();
   const [textContent, setTextContent] = useState('');
-  const { 
-    isLoading, 
-    result, 
-    setResult, 
-    callWebhook,
-    navigateHistory,
-    canGoBack,
-    canGoForward,
-    currentHistoryEntry
-  } = useWebhookSubmission({
-    fallbackGenerator: generateFallbackCanvas
-  });
-
+  
   const generateFallbackCanvas = (content: string) => {
     return `# Generated Marketing Canvas
 
@@ -74,8 +61,20 @@ Recommended budget distribution across channels and initiatives with flexibility
 
 ## Risk Assessment
 Potential challenges and mitigation strategies to ensure campaign resilience and adaptability.`;
-  };
   
+  const { 
+    isLoading, 
+    result, 
+    setResult, 
+    callWebhook,
+    navigateHistory,
+    canGoBack,
+    canGoForward,
+    currentHistoryEntry
+  } = useWebhookSubmission({
+    fallbackGenerator: generateFallbackCanvas
+  });
+
   const handleFormSubmit = async (content: string, type: 'upload' | 'text') => {
     const params: Record<string, string> = {};
     setTextContent(content);
@@ -170,7 +169,7 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
           </p>
         </div>
         
-        <PdfUploadForm onSubmit={handleFormSubmit} />
+        <PdfUploadForm onSubmit={handleFormSubmit} initialTextContent={textContent} />
       </div>
     </div>
   );
