@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -61,6 +62,7 @@ Recommended budget distribution across channels and initiatives with flexibility
 
 ## Risk Assessment
 Potential challenges and mitigation strategies to ensure campaign resilience and adaptability.`;
+  };
   
   const { 
     isLoading, 
