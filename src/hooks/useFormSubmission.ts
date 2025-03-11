@@ -1,5 +1,4 @@
-
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export interface FormData {
@@ -14,22 +13,33 @@ export interface FormData {
   relationalSentiment: string;
 }
 
+const FORM_DATA_STORAGE_KEY = 'marketing-form-data';
+
 export const useFormSubmission = () => {
-  const [formData, setFormData] = useState<FormData>({
-    role: '',
-    clientName: '',
-    clientIndustry: '',
-    sponsored: '',
-    event: '',
-    targetAudience: '',
-    location: '',
-    productService: '',
-    relationalSentiment: ''
+  // Load initial form data from localStorage or use default empty values
+  const [formData, setFormData] = useState<FormData>(() => {
+    const savedData = localStorage.getItem(FORM_DATA_STORAGE_KEY);
+    return savedData ? JSON.parse(savedData) : {
+      role: '',
+      clientName: '',
+      clientIndustry: '',
+      sponsored: '',
+      event: '',
+      targetAudience: '',
+      location: '',
+      productService: '',
+      relationalSentiment: ''
+    };
   });
   
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Save form data to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(FORM_DATA_STORAGE_KEY, JSON.stringify(formData));
+  }, [formData]);
 
   const handleChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({
@@ -43,6 +53,22 @@ export const useFormSubmission = () => {
         [field]: ''
       }));
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      role: '',
+      clientName: '',
+      clientIndustry: '',
+      sponsored: '',
+      event: '',
+      targetAudience: '',
+      location: '',
+      productService: '',
+      relationalSentiment: ''
+    });
+    setErrors({});
+    toast.success('Form has been reset');
   };
 
   const validateForm = () => {
@@ -168,6 +194,7 @@ Multi-channel approach leveraging digital and traditional media to reach ${data.
     errors,
     handleChange,
     handleSubmit,
+    resetForm,
     setResult
   };
 };

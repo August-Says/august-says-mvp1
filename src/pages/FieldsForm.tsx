@@ -17,6 +17,7 @@ const FieldsForm = () => {
     errors, 
     handleChange, 
     handleSubmit,
+    resetForm,
     setResult 
   } = useFormSubmission();
   
@@ -96,6 +97,7 @@ const FieldsForm = () => {
           errors={errors}
           onSubmit={handleSubmit}
           onChange={handleChange}
+          onReset={resetForm}
         />
       </div>
     </div>
