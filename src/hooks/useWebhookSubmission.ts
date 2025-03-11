@@ -83,35 +83,15 @@ Detailed breakdown of primary and secondary audience segments.
         console.log('Parsed response data:', data);
       } catch (parseError) {
         console.error('Failed to parse JSON response:', parseError);
-        throw new Error('Invalid response format from server');
+        // Just use the raw text if we can't parse it
+        data = responseText;
       }
       
-      // Extract canvas content from the response
-      let canvasContent = '';
-      
+      // Store the raw response - we'll process it in the ResultDisplay component
       if (data) {
-        // Try different possible response structures
-        if (data.canvas) {
-          canvasContent = data.canvas;
-        } else if (Array.isArray(data) && data.length > 0) {
-          // If it's an array, try to find an object with output or canvas property
-          const firstItem = data[0];
-          canvasContent = firstItem.canvas || firstItem.output || JSON.stringify(firstItem);
-        } else if (typeof data === 'object') {
-          // If it's an object with no canvas property, stringify it
-          canvasContent = data.output || JSON.stringify(data);
-        } else if (typeof data === 'string') {
-          // If it's already a string
-          canvasContent = data;
-        }
-      }
-      
-      console.log('Extracted canvas content:', canvasContent);
-      
-      if (canvasContent) {
-        setResult(canvasContent);
+        setResult(typeof data === 'string' ? data : JSON.stringify(data));
         toast.success('Canvas generated successfully!');
-        return canvasContent;
+        return data;
       } else {
         console.warn('No canvas content found in response, using fallback');
         const fallbackContent = fallbackGenerator(contentValue || '');

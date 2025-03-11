@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -34,14 +35,20 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
     try {
       const parsed = JSON.parse(content);
       if (Array.isArray(parsed)) {
+        // Handle array of responses (multiple webhook responses)
         return parsed.flatMap(item => {
           const output = item.output || item.canvas || '';
           return output.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
         }).filter(section => section.trim());
+      } else if (typeof parsed === 'object' && parsed.output) {
+        // Handle single response with output property
+        return parsed.output.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
       }
     } catch (e) {
-      return content.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
+      console.log('Error parsing JSON:', e);
+      // If not valid JSON, process as plain text
     }
+    // Default fallback - split on section markers
     return content.split(/(?:##|\*\*(?:SUMMARY|QUESTION):\*\*)/);
   };
 
@@ -51,6 +58,12 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
     }
     if (section.toLowerCase().includes('question')) {
       return 'Question';
+    }
+    if (section.toLowerCase().includes('outcome')) {
+      return 'Outcome';
+    }
+    if (section.toLowerCase().includes('strategic implications')) {
+      return 'Strategic Implications';
     }
     return `Section ${index + 1}`;
   };
