@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -39,26 +38,21 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   };
 
   const splitIntoSections = (content: string) => {
-    // Split by standard markdown headers and specific title patterns
-    const sectionPattern = /(?:###\s*|##\s*|\*\*)(SUMMARY|OBJECTIVE|THE OUTCOME|STRATEGIC IMPLICATIONS)(?:\s*:|\*\*\s*:|\*\*)/gi;
+    const sectionPattern = /(?:###\s*|##\s*|\*\*)(SUMMARY|OBJECTIVE|THE OUTCOME|STRATEGIC IMPLICATIONS|WHAT IS A CANVASS|RECOMMENDED CANVASS FORMAT)(?:\s*:|\*\*\s*:|\*\*)/gi;
     
-    // Find all matches with their positions
     const matches = [...content.matchAll(new RegExp(sectionPattern, 'gi'))];
     
     const sections = [];
     
-    // Process each match
     for (let i = 0; i < matches.length; i++) {
       const match = matches[i];
       const startPos = match.index!;
       const endPos = i < matches.length - 1 ? matches[i + 1].index! : content.length;
       
-      // Extract and clean the title
       const titleMatch = match[0];
-      const titleContent = match[1]; // The captured group
+      const titleContent = match[1];
       const cleanTitle = titleContent.trim();
       
-      // Extract the content, removing the title part
       const sectionContent = content.substring(startPos + titleMatch.length, endPos).trim();
       
       if (sectionContent) {
@@ -73,7 +67,6 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   };
 
   const formatSectionTitle = (title: string): string => {
-    // Return the title in a consistent format
     title = title.toUpperCase();
     
     switch (title) {
@@ -85,6 +78,10 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         return 'The Outcome';
       case 'STRATEGIC IMPLICATIONS':
         return 'Strategic Implications';
+      case 'WHAT IS A CANVASS':
+        return 'What is a Canvass';
+      case 'RECOMMENDED CANVASS FORMAT':
+        return 'Recommended Canvass Format';
       default:
         return title.charAt(0).toUpperCase() + title.slice(1).toLowerCase();
     }
@@ -134,7 +131,7 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
                 transition={{ duration: 0.4, delay: 0.1 * index }}
                 className="border-b border-white/10 pb-6 last:border-0"
               >
-                <h3 className="text-xl font-semibold text-white mb-3">{title}</h3>
+                <h3 className="text-xl font-bold text-white mb-3 tracking-wide">{title}</h3>
                 <div className="text-white/80 prose prose-sm prose-invert max-w-none">
                   {renderMarkdownContent(content)}
                 </div>
