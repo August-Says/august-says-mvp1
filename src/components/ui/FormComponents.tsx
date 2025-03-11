@@ -65,14 +65,14 @@ export const FormSelect: React.FC<FormSelectProps> = ({
       <SelectTrigger 
         id={id} 
         className={cn(
-          "bg-white/10 border-white/20 text-white focus:ring-august-purple", 
+          "bg-white/10 border-white/20 text-white focus:ring-cloudai-purple", 
           error ? "border-red-400" : "",
           className
         )}
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
-      <SelectContent className="bg-august-darkgray/90 border-white/20 text-white backdrop-blur-md">
+      <SelectContent className="bg-cloudai-darkpurple/90 border-white/20 text-white backdrop-blur-md">
         {options.map((option) => (
           <SelectItem 
             key={option.value} 
@@ -114,7 +114,7 @@ export const FormInput: React.FC<FormInputProps> = ({
       onChange={onChange}
       placeholder={placeholder}
       className={cn(
-        "bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-august-purple",
+        "bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-cloudai-purple",
         error ? "border-red-400" : "",
         className
       )}
@@ -148,7 +148,7 @@ export const FormTextarea: React.FC<FormTextareaProps> = ({
       onChange={onChange}
       placeholder={placeholder}
       className={cn(
-        "bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-august-purple",
+        "bg-white/10 border-white/20 text-white placeholder:text-white/50 focus-visible:ring-cloudai-purple",
         error ? "border-red-400" : "",
         className
       )}
@@ -185,7 +185,7 @@ export const FormRadioGroup: React.FC<FormRadioGroupProps> = ({
           <RadioGroupItem 
             id={`${id}-${option.value}`} 
             value={option.value} 
-            className="border-white/40 text-white bg-white/10 focus:ring-august-purple"
+            className="border-white/40 text-white bg-white/10 focus:ring-cloudai-purple"
           />
           <Label 
             htmlFor={`${id}-${option.value}`}

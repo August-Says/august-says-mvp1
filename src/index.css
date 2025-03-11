@@ -16,7 +16,7 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
 
-    --primary: 260 86% 65%;
+    --primary: 262 76% 44%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 240 4.8% 95.9%;
@@ -33,7 +33,7 @@
 
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 262 83% 58%;
+    --ring: 262 76% 44%;
 
     --radius: 1rem;
   }
@@ -49,7 +49,7 @@
   }
 
   ::selection {
-    @apply bg-august-purple/30 text-foreground;
+    @apply bg-cloudai-purple/30 text-foreground;
   }
 }
 
@@ -59,7 +59,7 @@
   }
   
   .canvas-gradient {
-    @apply bg-gradient-canvas;
+    @apply bg-gradient-cloudai;
   }
 
   .text-balance {

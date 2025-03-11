@@ -20,7 +20,7 @@ const LoadingAnimation = ({ message = "Generating your canvas..." }: LoadingAnim
             repeat: Infinity,
             ease: "easeInOut"
           }}
-          className="absolute inset-0 rounded-full bg-august-purple/30 backdrop-blur-sm"
+          className="absolute inset-0 rounded-full bg-cloudai-purple/30 backdrop-blur-sm"
         />
         
         <motion.div

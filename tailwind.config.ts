@@ -69,9 +69,18 @@ export default {
 				august: {
 					purple: '#7B5CF0',
 					blue: '#3C86F0',
+					darkpurple: '#1F1344',
+					lightpurple: '#9B87F5',
 					accent: '#FF7D63',
 					lightgray: '#F7F8FA',
 					darkgray: '#2A2A2A',
+				},
+				cloudai: {
+					purple: '#6330B4',
+					violetpurple: '#7D49C6',
+					blue: '#3055B5',
+					lightblue: '#5280E1',
+					darkpurple: '#120E29',
 				}
 			},
 			borderRadius: {
@@ -140,7 +149,8 @@ export default {
 				'spin-slow': 'spin-slow 3s linear infinite'
 			},
 			backgroundImage: {
-				'gradient-canvas': 'linear-gradient(130deg, #7B5CF0 0%, #3C86F0 100%)',
+				'gradient-canvas': 'linear-gradient(130deg, #6330B4 0%, #3055B5 100%)',
+				'gradient-cloudai': 'linear-gradient(150deg, #6330B4 0%, #120E29 40%, #3055B5 100%)',
 			},
 		}
 	},
