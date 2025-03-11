@@ -36,6 +36,71 @@ export const useFormSubmission = () => {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // Define the fallback canvas generator function before using it
+  const generateFallbackCanvas = (data: string) => {
+    // Since we're passing the entire formData object as params
+    // we'll extract client details from the data parameter if possible
+    // or create a generic response
+    
+    let clientName = "the client";
+    let targetAudience = "target audience";
+    let location = "the market";
+    let productService = "products/services";
+    let relationalSentiment = "customer needs";
+    
+    try {
+      // Try to extract some key information from the data
+      const parsedData = JSON.parse(data) as FormData;
+      clientName = parsedData.clientName || clientName;
+      targetAudience = parsedData.targetAudience || targetAudience;
+      location = parsedData.location || location;
+      productService = parsedData.productService || productService;
+      relationalSentiment = parsedData.relationalSentiment || relationalSentiment;
+    } catch (e) {
+      // If data is not valid JSON, use the current formData
+      clientName = formData.clientName || clientName;
+      targetAudience = formData.targetAudience || targetAudience;
+      location = formData.location || location;
+      productService = formData.productService || productService;
+      relationalSentiment = formData.relationalSentiment || relationalSentiment;
+    }
+    
+    return `# Marketing Canvas for ${clientName}
+
+## Executive Summary
+A strategic marketing canvas designed for ${clientName} targeting ${targetAudience} in ${location}. This canvas focuses on ${productService} with emphasis on ${relationalSentiment}.
+
+## Target Audience
+The primary audience comprises ${targetAudience} with specific needs related to ${productService} in the ${formData.clientIndustry || "industry"} sector.
+
+## Key Messages
+1. Emphasize trust and reliability in all communications
+2. Focus on unique selling propositions of ${productService}
+3. Address customer pain points around ${relationalSentiment}
+
+## Channel Strategy
+Multi-channel approach leveraging digital and traditional media to reach ${targetAudience} in ${location}.
+
+## Implementation Timeline
+- Week 1-2: Initial research and concept development
+- Week 3-4: Content creation and channel preparation
+- Week 5-6: Campaign launch and initial monitoring
+- Week 7-8: Performance review and optimization
+
+## Budget Allocation
+- Research & Strategy: 20%
+- Creative Development: 30%
+- Media Placement: 35%
+- Monitoring & Optimization: 15%
+
+## Success Metrics
+- Engagement rates across all platforms
+- Lead generation quantity and quality
+- Conversion rates
+- Customer satisfaction related to ${relationalSentiment}
+- ROI measurement`;
+  };
+
   // Use the shared webhook submission hook with a custom fallback generator
   const { isLoading, result, setResult, callWebhook } = useWebhookSubmission({
     fallbackGenerator: generateFallbackCanvas
@@ -121,71 +186,6 @@ export const useFormSubmission = () => {
     
     // Call the webhook with the form data
     await callWebhook(params);
-  };
-
-  // Generate fallback canvas in case of API failure
-  const generateFallbackCanvas = (data: string) => {
-    // Since we're passing the entire formData object as params
-    // we'll extract client details from the data parameter if possible
-    // or create a generic response
-    
-    let clientName = "the client";
-    let targetAudience = "target audience";
-    let location = "the market";
-    let productService = "products/services";
-    let relationalSentiment = "customer needs";
-    
-    try {
-      // Try to extract some key information from the data
-      const parsedData = JSON.parse(data) as FormData;
-      clientName = parsedData.clientName || clientName;
-      targetAudience = parsedData.targetAudience || targetAudience;
-      location = parsedData.location || location;
-      productService = parsedData.productService || productService;
-      relationalSentiment = parsedData.relationalSentiment || relationalSentiment;
-    } catch (e) {
-      // If data is not valid JSON, use the current formData
-      clientName = formData.clientName || clientName;
-      targetAudience = formData.targetAudience || targetAudience;
-      location = formData.location || location;
-      productService = formData.productService || productService;
-      relationalSentiment = formData.relationalSentiment || relationalSentiment;
-    }
-    
-    return `# Marketing Canvas for ${clientName}
-
-## Executive Summary
-A strategic marketing canvas designed for ${clientName} targeting ${targetAudience} in ${location}. This canvas focuses on ${productService} with emphasis on ${relationalSentiment}.
-
-## Target Audience
-The primary audience comprises ${targetAudience} with specific needs related to ${productService} in the ${formData.clientIndustry || "industry"} sector.
-
-## Key Messages
-1. Emphasize trust and reliability in all communications
-2. Focus on unique selling propositions of ${productService}
-3. Address customer pain points around ${relationalSentiment}
-
-## Channel Strategy
-Multi-channel approach leveraging digital and traditional media to reach ${targetAudience} in ${location}.
-
-## Implementation Timeline
-- Week 1-2: Initial research and concept development
-- Week 3-4: Content creation and channel preparation
-- Week 5-6: Campaign launch and initial monitoring
-- Week 7-8: Performance review and optimization
-
-## Budget Allocation
-- Research & Strategy: 20%
-- Creative Development: 30%
-- Media Placement: 35%
-- Monitoring & Optimization: 15%
-
-## Success Metrics
-- Engagement rates across all platforms
-- Lead generation quantity and quality
-- Conversion rates
-- Customer satisfaction related to ${relationalSentiment}
-- ROI measurement`;
   };
 
   return {
