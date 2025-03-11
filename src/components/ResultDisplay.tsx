@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -25,37 +26,71 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         return parsed.flatMap(item => {
           const output = item.output || item.canvas || '';
           if (!output) return [];
-          return output.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
-        }).filter(section => section.trim());
+          return splitIntoSections(output);
+        }).filter(section => section && section.content.trim());
       } else if (typeof parsed === 'object' && (parsed.output || parsed.canvas)) {
         const output = parsed.output || parsed.canvas;
-        return output.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
+        return splitIntoSections(output);
       }
     } catch (e) {
-      return content.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
+      return splitIntoSections(content);
     }
-    return [content];
+    return [];
   };
 
-  const getSectionTitle = (section: string, index: number): string => {
-    const sectionTypes = {
-      summary: 'Summary',
-      question: 'Question',
-      outcome: 'Outcome',
-      'strategic implications': 'Strategic Implications'
-    };
-
-    const sectionContent = section.toLowerCase();
-    for (const [key, value] of Object.entries(sectionTypes)) {
-      if (sectionContent.includes(key)) {
-        return value;
+  const splitIntoSections = (content: string) => {
+    // Split by standard markdown headers and specific title patterns
+    const sectionPattern = /(?:###\s*|##\s*|\*\*)(SUMMARY|OBJECTIVE|THE OUTCOME|STRATEGIC IMPLICATIONS)(?:\s*:|\*\*\s*:|\*\*)/gi;
+    
+    // Find all matches with their positions
+    const matches = [...content.matchAll(new RegExp(sectionPattern, 'gi'))];
+    
+    const sections = [];
+    
+    // Process each match
+    for (let i = 0; i < matches.length; i++) {
+      const match = matches[i];
+      const startPos = match.index!;
+      const endPos = i < matches.length - 1 ? matches[i + 1].index! : content.length;
+      
+      // Extract and clean the title
+      const titleMatch = match[0];
+      const titleContent = match[1]; // The captured group
+      const cleanTitle = titleContent.trim();
+      
+      // Extract the content, removing the title part
+      const sectionContent = content.substring(startPos + titleMatch.length, endPos).trim();
+      
+      if (sectionContent) {
+        sections.push({
+          title: cleanTitle,
+          content: sectionContent
+        });
       }
     }
-    return `Section ${index + 1}`;
+    
+    return sections;
   };
 
-  const processedResult = result;
-  const sections = processContent(processedResult);
+  const formatSectionTitle = (title: string): string => {
+    // Return the title in a consistent format
+    title = title.toUpperCase();
+    
+    switch (title) {
+      case 'SUMMARY':
+        return 'Summary';
+      case 'OBJECTIVE':
+        return 'Objective';
+      case 'THE OUTCOME':
+        return 'The Outcome';
+      case 'STRATEGIC IMPLICATIONS':
+        return 'Strategic Implications';
+      default:
+        return title.charAt(0).toUpperCase() + title.slice(1).toLowerCase();
+    }
+  };
+
+  const processedSections = processContent(result);
   
   return (
     <motion.div 
@@ -86,10 +121,10 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
       </div>
       
       <div className="space-y-8 text-white/90">
-        {sections.length > 0 ? (
-          sections.map((section, index) => {
-            const title = getSectionTitle(section, index);
-            const content = section.trim();
+        {processedSections.length > 0 ? (
+          processedSections.map((section, index) => {
+            const title = formatSectionTitle(section.title);
+            const content = section.content.trim();
             
             return (
               <motion.div 
