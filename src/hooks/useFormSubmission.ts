@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
+import { useWebhookSubmission } from './useWebhookSubmission';
 
 export interface FormData {
   role: string;
@@ -33,9 +34,12 @@ export const useFormSubmission = () => {
     };
   });
   
-  const [isLoading, setIsLoading] = useState(false);
-  const [result, setResult] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Use the shared webhook submission hook with a custom fallback generator
+  const { isLoading, result, setResult, callWebhook } = useWebhookSubmission({
+    fallbackGenerator: generateFallbackCanvas
+  });
 
   // Save form data to localStorage whenever it changes
   useEffect(() => {
@@ -105,109 +109,64 @@ export const useFormSubmission = () => {
       return;
     }
     
-    setIsLoading(true);
+    // Create a params object to pass to the webhook
+    const params: Record<string, string> = {};
     
-    try {
-      const webhookUrl = 'https://sonarai.app.n8n.cloud/webhook-test/715d27f7-f730-437c-8abe-cda82e04210e';
-      const queryParams = new URLSearchParams();
-      
-      // Log the form data being sent
-      console.log('Sending form data to webhook:', formData);
-      
-      Object.entries(formData).forEach(([key, value]) => {
-        if (value) {
-          queryParams.append(key, value);
-        }
-      });
-      
-      const fullUrl = `${webhookUrl}?${queryParams.toString()}`;
-      console.log('Making request to:', fullUrl);
-      
-      const response = await fetch(fullUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-      
-      console.log('Response status:', response.status);
-      
-      if (!response.ok) {
-        throw new Error(`Webhook responded with status: ${response.status}`);
+    // Add all form data to query params
+    Object.entries(formData).forEach(([key, value]) => {
+      if (value) {
+        params[key] = value;
       }
-      
-      // Get the raw response text first for debugging
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
-      
-      // Handle the response more carefully
-      let data;
-      try {
-        data = responseText ? JSON.parse(responseText) : null;
-        console.log('Parsed response data:', data);
-      } catch (parseError) {
-        console.error('Failed to parse JSON response:', parseError);
-        throw new Error('Invalid response format from server');
-      }
-      
-      // Extract canvas content from the response
-      // The response format might be different than expected
-      let canvasContent = '';
-      
-      if (data) {
-        // Try different possible response structures
-        if (data.canvas) {
-          canvasContent = data.canvas;
-        } else if (Array.isArray(data) && data.length > 0) {
-          // If it's an array, try to find an object with output or canvas property
-          const firstItem = data[0];
-          canvasContent = firstItem.canvas || firstItem.output || JSON.stringify(firstItem);
-        } else if (typeof data === 'object') {
-          // If it's an object with no canvas property, stringify it
-          canvasContent = data.output || JSON.stringify(data);
-        } else if (typeof data === 'string') {
-          // If it's already a string
-          canvasContent = data;
-        }
-      }
-      
-      console.log('Extracted canvas content:', canvasContent);
-      
-      if (canvasContent) {
-        setResult(canvasContent);
-        toast.success('Canvas generated successfully!');
-      } else {
-        console.warn('No canvas content found in response, using fallback');
-        setResult(generateFallbackCanvas(formData));
-        toast.info('Used fallback canvas data');
-      }
-    } catch (error) {
-      console.error('Webhook error:', error);
-      toast.error('Failed to generate canvas. Using fallback data.');
-      // Use fallback data on error
-      setResult(generateFallbackCanvas(formData));
-    } finally {
-      setIsLoading(false);
-    }
+    });
+    
+    // Call the webhook with the form data
+    await callWebhook(params);
   };
 
   // Generate fallback canvas in case of API failure
-  const generateFallbackCanvas = (data: FormData) => {
-    return `# Marketing Canvas for ${data.clientName}
+  const generateFallbackCanvas = (data: string) => {
+    // Since we're passing the entire formData object as params
+    // we'll extract client details from the data parameter if possible
+    // or create a generic response
+    
+    let clientName = "the client";
+    let targetAudience = "target audience";
+    let location = "the market";
+    let productService = "products/services";
+    let relationalSentiment = "customer needs";
+    
+    try {
+      // Try to extract some key information from the data
+      const parsedData = JSON.parse(data) as FormData;
+      clientName = parsedData.clientName || clientName;
+      targetAudience = parsedData.targetAudience || targetAudience;
+      location = parsedData.location || location;
+      productService = parsedData.productService || productService;
+      relationalSentiment = parsedData.relationalSentiment || relationalSentiment;
+    } catch (e) {
+      // If data is not valid JSON, use the current formData
+      clientName = formData.clientName || clientName;
+      targetAudience = formData.targetAudience || targetAudience;
+      location = formData.location || location;
+      productService = formData.productService || productService;
+      relationalSentiment = formData.relationalSentiment || relationalSentiment;
+    }
+    
+    return `# Marketing Canvas for ${clientName}
 
 ## Executive Summary
-A strategic marketing canvas designed for ${data.clientName} targeting ${data.targetAudience} in ${data.location}. This canvas focuses on ${data.productService} with emphasis on ${data.relationalSentiment}.
+A strategic marketing canvas designed for ${clientName} targeting ${targetAudience} in ${location}. This canvas focuses on ${productService} with emphasis on ${relationalSentiment}.
 
 ## Target Audience
-The primary audience comprises ${data.targetAudience} with specific needs related to ${data.productService} in the ${data.clientIndustry} sector.
+The primary audience comprises ${targetAudience} with specific needs related to ${productService} in the ${formData.clientIndustry || "industry"} sector.
 
 ## Key Messages
 1. Emphasize trust and reliability in all communications
-2. Focus on unique selling propositions of ${data.productService}
-3. Address customer pain points around ${data.relationalSentiment}
+2. Focus on unique selling propositions of ${productService}
+3. Address customer pain points around ${relationalSentiment}
 
 ## Channel Strategy
-Multi-channel approach leveraging digital and traditional media to reach ${data.targetAudience} in ${data.location}.
+Multi-channel approach leveraging digital and traditional media to reach ${targetAudience} in ${location}.
 
 ## Implementation Timeline
 - Week 1-2: Initial research and concept development
@@ -225,7 +184,7 @@ Multi-channel approach leveraging digital and traditional media to reach ${data.
 - Engagement rates across all platforms
 - Lead generation quantity and quality
 - Conversion rates
-- Customer satisfaction related to ${data.relationalSentiment}
+- Customer satisfaction related to ${relationalSentiment}
 - ROI measurement`;
   };
 
