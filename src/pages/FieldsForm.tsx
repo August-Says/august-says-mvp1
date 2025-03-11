@@ -6,6 +6,7 @@ import LoadingAnimation from '@/components/LoadingAnimation';
 import ResultDisplay from '@/components/ResultDisplay';
 import MarketingForm from '@/components/MarketingForm';
 import { useFormSubmission } from '@/hooks/useFormSubmission';
+import { useState, useEffect } from 'react';
 
 const FieldsForm = () => {
   const navigate = useNavigate();
@@ -18,6 +19,32 @@ const FieldsForm = () => {
     handleSubmit,
     setResult 
   } = useFormSubmission();
+  
+  // Simulated loading progress
+  const [loadingProgress, setLoadingProgress] = useState(0);
+  
+  // When loading starts, animate the progress
+  useEffect(() => {
+    if (isLoading) {
+      setLoadingProgress(0);
+      const interval = setInterval(() => {
+        setLoadingProgress(prev => {
+          // Slow down as it approaches 90%
+          const increment = prev < 30 ? 5 : prev < 60 ? 3 : prev < 80 ? 1 : 0.5;
+          const newProgress = Math.min(prev + increment, 90);
+          return newProgress;
+        });
+      }, 300);
+      
+      return () => {
+        clearInterval(interval);
+        // When loading completes, jump to 100%
+        if (isLoading) {
+          setLoadingProgress(100);
+        }
+      };
+    }
+  }, [isLoading]);
 
   const handleBack = () => {
     if (result) {
@@ -30,7 +57,7 @@ const FieldsForm = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
-        <LoadingAnimation />
+        <LoadingAnimation progress={loadingProgress} />
       </div>
     );
   }

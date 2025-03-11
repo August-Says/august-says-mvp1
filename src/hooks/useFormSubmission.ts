@@ -101,23 +101,45 @@ export const useFormSubmission = () => {
         throw new Error(`Webhook responded with status: ${response.status}`);
       }
       
-      const data = await response.json();
+      // Handle the response more carefully
+      let data;
+      try {
+        const responseText = await response.text();
+        data = responseText ? JSON.parse(responseText) : null;
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        throw new Error('Invalid response format from server');
+      }
       
-      setResult(data.canvas || `# Marketing Canvas for ${formData.clientName}
+      setResult(data?.canvas || generateFallbackCanvas(formData));
+      toast.success('Canvas generated successfully!');
+    } catch (error) {
+      console.error('Webhook error:', error);
+      toast.error('Failed to generate canvas. Using fallback data.');
+      // Use fallback data on error
+      setResult(generateFallbackCanvas(formData));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Generate fallback canvas in case of API failure
+  const generateFallbackCanvas = (data: FormData) => {
+    return `# Marketing Canvas for ${data.clientName}
 
 ## Executive Summary
-A strategic marketing canvas designed for ${formData.clientName} targeting ${formData.targetAudience} in ${formData.location}. This canvas focuses on ${formData.productService} with emphasis on ${formData.relationalSentiment}.
+A strategic marketing canvas designed for ${data.clientName} targeting ${data.targetAudience} in ${data.location}. This canvas focuses on ${data.productService} with emphasis on ${data.relationalSentiment}.
 
 ## Target Audience
-The primary audience comprises ${formData.targetAudience} with specific needs related to ${formData.productService} in the ${formData.clientIndustry} sector.
+The primary audience comprises ${data.targetAudience} with specific needs related to ${data.productService} in the ${data.clientIndustry} sector.
 
 ## Key Messages
 1. Emphasize trust and reliability in all communications
-2. Focus on unique selling propositions of ${formData.productService}
-3. Address customer pain points around ${formData.relationalSentiment}
+2. Focus on unique selling propositions of ${data.productService}
+3. Address customer pain points around ${data.relationalSentiment}
 
 ## Channel Strategy
-Multi-channel approach leveraging digital and traditional media to reach ${formData.targetAudience} in ${formData.location}.
+Multi-channel approach leveraging digital and traditional media to reach ${data.targetAudience} in ${data.location}.
 
 ## Implementation Timeline
 - Week 1-2: Initial research and concept development
@@ -135,16 +157,8 @@ Multi-channel approach leveraging digital and traditional media to reach ${formD
 - Engagement rates across all platforms
 - Lead generation quantity and quality
 - Conversion rates
-- Customer satisfaction related to ${formData.relationalSentiment}
-- ROI measurement`);
-      
-      toast.success('Canvas generated successfully!');
-    } catch (error) {
-      console.error('Webhook error:', error);
-      toast.error('Failed to generate canvas. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
+- Customer satisfaction related to ${data.relationalSentiment}
+- ROI measurement`;
   };
 
   return {
