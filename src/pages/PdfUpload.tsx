@@ -38,32 +38,22 @@ const PdfUpload = () => {
     setErrors(newErrors);
     return isValid;
   };
-  
-  const handleSubmit = async (e: React.FormEvent, activeTab: string) => {
-    e.preventDefault();
-    
-    if (!validateForm(activeTab)) {
-      toast.error(`Please ${activeTab === 'upload' ? 'upload a PDF file' : 'enter some text content'}`);
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      // Simulate API call with a timeout
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      // Mocked response for demonstration
-      setResult(`# Generated Marketing Canvas
+
+  const generateFallbackCanvas = (content: string) => {
+    return `# Generated Marketing Canvas
 
 ## Executive Summary
-A comprehensive marketing strategy based on the ${activeTab === 'upload' ? 'uploaded PDF document' : 'provided text content'}. This canvas outlines key objectives, target audience insights, and actionable recommendations.
+A comprehensive marketing strategy based on the provided content. This canvas outlines key objectives, target audience insights, and actionable recommendations.
 
 ## Strategic Objectives
 1. Increase brand awareness among target demographics
 2. Improve customer engagement metrics across channels
 3. Drive conversion rates through optimized customer journeys
 4. Strengthen brand positioning against competitors
+
+**QUESTION:** How can we effectively increase brand awareness?
+
+${content.substring(0, 200)}${content.length > 200 ? '...' : ''}
 
 ## Target Audience Analysis
 Detailed breakdown of primary and secondary audience segments with behavioral patterns, preferences, and pain points identified through data analysis.
@@ -97,11 +87,99 @@ Recommended budget distribution across channels and initiatives with flexibility
 - Customer satisfaction scores
 
 ## Risk Assessment
-Potential challenges and mitigation strategies to ensure campaign resilience and adaptability.`);
+Potential challenges and mitigation strategies to ensure campaign resilience and adaptability.`;
+  };
+  
+  const handleSubmit = async (e: React.FormEvent, activeTab: string) => {
+    e.preventDefault();
+    
+    if (!validateForm(activeTab)) {
+      toast.error(`Please ${activeTab === 'upload' ? 'upload a PDF file' : 'enter some text content'}`);
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      const webhookUrl = 'https://sonarai.app.n8n.cloud/webhook-test/715d27f7-f730-437c-8abe-cda82e04210e';
+      const queryParams = new URLSearchParams();
       
-      toast.success('Canvas generated successfully!');
+      // If using text tab, add the text content to query params
+      if (activeTab === 'text') {
+        queryParams.append('textContent', textContent);
+        console.log('Sending text content to webhook:', textContent.substring(0, 100) + '...');
+      } else {
+        // For PDF upload (not implemented yet)
+        queryParams.append('pdfUploaded', 'true');
+        console.log('PDF upload webhooks not fully implemented yet');
+      }
+      
+      const fullUrl = `${webhookUrl}?${queryParams.toString()}`;
+      console.log('Making request to:', fullUrl);
+      
+      const response = await fetch(fullUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+      
+      console.log('Response status:', response.status);
+      
+      if (!response.ok) {
+        throw new Error(`Webhook responded with status: ${response.status}`);
+      }
+      
+      // Get the raw response text first for debugging
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+      
+      // Handle the response more carefully
+      let data;
+      try {
+        data = responseText ? JSON.parse(responseText) : null;
+        console.log('Parsed response data:', data);
+      } catch (parseError) {
+        console.error('Failed to parse JSON response:', parseError);
+        throw new Error('Invalid response format from server');
+      }
+      
+      // Extract canvas content from the response
+      let canvasContent = '';
+      
+      if (data) {
+        // Try different possible response structures
+        if (data.canvas) {
+          canvasContent = data.canvas;
+        } else if (Array.isArray(data) && data.length > 0) {
+          // If it's an array, try to find an object with output or canvas property
+          const firstItem = data[0];
+          canvasContent = firstItem.canvas || firstItem.output || JSON.stringify(firstItem);
+        } else if (typeof data === 'object') {
+          // If it's an object with no canvas property, stringify it
+          canvasContent = data.output || JSON.stringify(data);
+        } else if (typeof data === 'string') {
+          // If it's already a string
+          canvasContent = data;
+        }
+      }
+      
+      console.log('Extracted canvas content:', canvasContent);
+      
+      if (canvasContent) {
+        setResult(canvasContent);
+        toast.success('Canvas generated successfully!');
+      } else {
+        console.warn('No canvas content found in response, using fallback');
+        // Use fallback data with the text content included
+        setResult(generateFallbackCanvas(activeTab === 'text' ? textContent : 'PDF content not available'));
+        toast.info('Used fallback canvas data');
+      }
     } catch (error) {
-      toast.error('Failed to generate canvas. Please try again.');
+      console.error('Webhook error:', error);
+      toast.error('Failed to generate canvas. Using fallback data.');
+      // Use fallback data on error
+      setResult(generateFallbackCanvas(activeTab === 'text' ? textContent : 'PDF content not available'));
     } finally {
       setIsLoading(false);
     }
@@ -233,3 +311,4 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
 };
 
 export default PdfUpload;
+
