@@ -1,33 +1,69 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
+import { 
+  FormField, 
+  FormTextarea,
+  FileUpload
+} from '@/components/ui/FormComponents';
 import LoadingAnimation from '@/components/LoadingAnimation';
 import ResultDisplay from '@/components/ResultDisplay';
-import PdfUploadForm from '@/components/pdf/PdfUploadForm';
-import { useWebhookSubmission } from '@/hooks/useWebhookSubmission';
-import { toast } from 'sonner';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const PdfUpload = () => {
   const navigate = useNavigate();
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [textContent, setTextContent] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [result, setResult] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = (activeTab: string) => {
+    const newErrors: Record<string, string> = {};
+    let isValid = true;
+    
+    if (activeTab === 'upload' && !pdfFile) {
+      newErrors.file = 'Please upload a PDF file';
+      isValid = false;
+    }
+    
+    if (activeTab === 'text' && !textContent.trim()) {
+      newErrors.text = 'Please enter some text content';
+      isValid = false;
+    }
+    
+    setErrors(newErrors);
+    return isValid;
+  };
   
-  const generateFallbackCanvas = (content: string) => {
-    return `# Generated Marketing Canvas
+  const handleSubmit = async (e: React.FormEvent, activeTab: string) => {
+    e.preventDefault();
+    
+    if (!validateForm(activeTab)) {
+      toast.error(`Please ${activeTab === 'upload' ? 'upload a PDF file' : 'enter some text content'}`);
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    try {
+      // Simulate API call with a timeout
+      await new Promise(resolve => setTimeout(resolve, 3000));
+      
+      // Mocked response for demonstration
+      setResult(`# Generated Marketing Canvas
 
 ## Executive Summary
-A comprehensive marketing strategy based on the provided content. This canvas outlines key objectives, target audience insights, and actionable recommendations.
+A comprehensive marketing strategy based on the ${activeTab === 'upload' ? 'uploaded PDF document' : 'provided text content'}. This canvas outlines key objectives, target audience insights, and actionable recommendations.
 
 ## Strategic Objectives
 1. Increase brand awareness among target demographics
 2. Improve customer engagement metrics across channels
 3. Drive conversion rates through optimized customer journeys
 4. Strengthen brand positioning against competitors
-
-**QUESTION:** How can we effectively increase brand awareness?
-
-${content.substring(0, 200)}${content.length > 200 ? '...' : ''}
 
 ## Target Audience Analysis
 Detailed breakdown of primary and secondary audience segments with behavioral patterns, preferences, and pain points identified through data analysis.
@@ -61,38 +97,13 @@ Recommended budget distribution across channels and initiatives with flexibility
 - Customer satisfaction scores
 
 ## Risk Assessment
-Potential challenges and mitigation strategies to ensure campaign resilience and adaptability.`;
-  };
-  
-  const { 
-    isLoading, 
-    result, 
-    setResult, 
-    callWebhook,
-    navigateHistory,
-    canGoBack,
-    canGoForward,
-    currentHistoryEntry
-  } = useWebhookSubmission({
-    fallbackGenerator: generateFallbackCanvas
-  });
-
-  const handleFormSubmit = async (content: string, type: 'upload' | 'text') => {
-    const params: Record<string, string> = {};
-    setTextContent(content);
-    
-    if (type === 'text') {
-      await callWebhook(params, 'textContent', content);
-    } else {
-      params.pdfUploaded = 'true';
-      await callWebhook(params);
-    }
-  };
-
-  const handleHistoryNavigation = (direction: 'back' | 'forward') => {
-    const historyEntry = navigateHistory(direction);
-    if (historyEntry?.contentValue) {
-      setTextContent(historyEntry.contentValue);
+Potential challenges and mitigation strategies to ensure campaign resilience and adaptability.`);
+      
+      toast.success('Canvas generated successfully!');
+    } catch (error) {
+      toast.error('Failed to generate canvas. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -115,36 +126,6 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
   if (result) {
     return (
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
-        <div className="max-w-4xl mx-auto mb-4 flex justify-between items-center">
-          <Button 
-            onClick={handleBack} 
-            variant="ghost" 
-            className="text-white/80 hover:text-white hover:bg-white/10"
-          >
-            <ArrowLeft size={18} className="mr-2" />
-            Back to Form
-          </Button>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => handleHistoryNavigation('back')}
-              variant="outline"
-              disabled={!canGoBack}
-              className="text-white border-white/20 hover:bg-white/10 disabled:opacity-50"
-            >
-              <ChevronLeft size={18} className="mr-1" />
-              Previous
-            </Button>
-            <Button
-              onClick={() => handleHistoryNavigation('forward')}
-              variant="outline"
-              disabled={!canGoForward}
-              className="text-white border-white/20 hover:bg-white/10 disabled:opacity-50"
-            >
-              Next
-              <ChevronRight size={18} className="ml-1" />
-            </Button>
-          </div>
-        </div>
         <ResultDisplay result={result} onBack={handleBack} />
       </div>
     );
@@ -171,7 +152,81 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
           </p>
         </div>
         
-        <PdfUploadForm onSubmit={handleFormSubmit} initialTextContent={textContent} />
+        <div className="glass-morphism rounded-2xl p-6 sm:p-8 shadow-lg">
+          <Tabs defaultValue="upload" className="w-full">
+            <TabsList className="grid w-full grid-cols-2 bg-white/10 text-white">
+              <TabsTrigger 
+                value="upload" 
+                className="data-[state=active]:bg-white/20 data-[state=active]:text-white"
+              >
+                Upload PDF
+              </TabsTrigger>
+              <TabsTrigger 
+                value="text" 
+                className="data-[state=active]:bg-white/20 data-[state=active]:text-white"
+              >
+                Paste Text
+              </TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="upload" className="mt-6">
+              <form onSubmit={(e) => handleSubmit(e, 'upload')}>
+                <FormField 
+                  label="Upload PDF Document" 
+                  htmlFor="pdfFile" 
+                  error={errors.file}
+                >
+                  <FileUpload
+                    id="pdfFile"
+                    onFileChange={setPdfFile}
+                    error={errors.file}
+                  />
+                </FormField>
+                
+                <div className="mt-8 flex justify-center">
+                  <Button 
+                    type="submit" 
+                    className="bg-august-purple hover:bg-august-purple/90 text-white font-medium px-10"
+                    size="lg"
+                    disabled={!pdfFile}
+                  >
+                    Generate Canvas
+                  </Button>
+                </div>
+              </form>
+            </TabsContent>
+            
+            <TabsContent value="text" className="mt-6">
+              <form onSubmit={(e) => handleSubmit(e, 'text')}>
+                <FormField 
+                  label="Paste Text Content" 
+                  htmlFor="textContent" 
+                  error={errors.text}
+                >
+                  <FormTextarea
+                    id="textContent"
+                    value={textContent}
+                    onChange={(e) => setTextContent(e.target.value)}
+                    placeholder="Paste the document text here..."
+                    error={errors.text}
+                    rows={10}
+                  />
+                </FormField>
+                
+                <div className="mt-8 flex justify-center">
+                  <Button 
+                    type="submit" 
+                    className="bg-august-purple hover:bg-august-purple/90 text-white font-medium px-10"
+                    size="lg"
+                    disabled={!textContent.trim()}
+                  >
+                    Generate Canvas
+                  </Button>
+                </div>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
     </div>
   );
