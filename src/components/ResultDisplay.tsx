@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -19,8 +18,27 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
     toast.success('Share functionality will be available soon!');
   };
 
-  // Parse result into sections (handling markdown format)
-  const sections = result.split('##').filter(section => section.trim());
+  const parseResult = (result: string) => {
+    try {
+      const parsed = JSON.parse(result);
+      if (typeof parsed === 'object') {
+        return JSON.stringify(parsed, null, 2);
+      }
+      return result;
+    } catch (e) {
+      return result;
+    }
+  };
+
+  const processContent = (content: string) => {
+    if (content.includes('##') || content.includes('#')) {
+      return content.split('##').filter(section => section.trim());
+    }
+    return [content];
+  };
+
+  const processedResult = parseResult(result);
+  const sections = processContent(processedResult);
   
   return (
     <motion.div 
@@ -53,10 +71,21 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
       <div className="space-y-8 text-white/90">
         {sections.length > 0 ? (
           sections.map((section, index) => {
-            // Parse section title and content
+            let title = '';
+            let content = '';
+            
             const lines = section.trim().split('\n');
-            const title = lines[0].trim();
-            const content = lines.slice(1).join('\n').trim();
+            
+            if (lines[0].startsWith('# ')) {
+              title = lines[0].substring(2).trim();
+              content = lines.slice(1).join('\n').trim();
+            } else if (lines[0].trim() && !lines[0].includes(':')) {
+              title = lines[0].trim();
+              content = lines.slice(1).join('\n').trim();
+            } else {
+              title = index === 0 ? 'Summary' : `Section ${index + 1}`;
+              content = section.trim();
+            }
             
             return (
               <motion.div 
@@ -93,15 +122,12 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   );
 };
 
-// Helper function to render markdown-like content
 const renderMarkdownContent = (content: string) => {
-  // Split by lines to process each one
   const lines = content.split('\n');
   
   return (
     <div>
       {lines.map((line, lineIndex) => {
-        // Handle bullet points
         if (line.trim().startsWith('-') || line.trim().startsWith('*')) {
           return (
             <div key={lineIndex} className="flex items-start space-x-2 my-1">
@@ -111,7 +137,6 @@ const renderMarkdownContent = (content: string) => {
           );
         }
         
-        // Handle numbered lists
         const numberedMatch = line.trim().match(/^(\d+)\.\s(.+)$/);
         if (numberedMatch) {
           return (
@@ -122,12 +147,10 @@ const renderMarkdownContent = (content: string) => {
           );
         }
         
-        // Handle empty lines as paragraphs
         if (line.trim() === '') {
           return <div key={lineIndex} className="h-4"></div>;
         }
         
-        // Default paragraph
         return <p key={lineIndex} className="my-1">{line}</p>;
       })}
     </div>

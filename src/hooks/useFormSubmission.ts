@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -110,35 +111,76 @@ export const useFormSubmission = () => {
       const webhookUrl = 'https://sonarai.app.n8n.cloud/webhook-test/715d27f7-f730-437c-8abe-cda82e04210e';
       const queryParams = new URLSearchParams();
       
+      // Log the form data being sent
+      console.log('Sending form data to webhook:', formData);
+      
       Object.entries(formData).forEach(([key, value]) => {
         if (value) {
           queryParams.append(key, value);
         }
       });
       
-      const response = await fetch(`${webhookUrl}?${queryParams.toString()}`, {
+      const fullUrl = `${webhookUrl}?${queryParams.toString()}`;
+      console.log('Making request to:', fullUrl);
+      
+      const response = await fetch(fullUrl, {
         method: 'GET',
         headers: {
           'Accept': 'application/json'
         }
       });
       
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
         throw new Error(`Webhook responded with status: ${response.status}`);
       }
       
+      // Get the raw response text first for debugging
+      const responseText = await response.text();
+      console.log('Raw response:', responseText);
+      
       // Handle the response more carefully
       let data;
       try {
-        const responseText = await response.text();
         data = responseText ? JSON.parse(responseText) : null;
+        console.log('Parsed response data:', data);
       } catch (parseError) {
         console.error('Failed to parse JSON response:', parseError);
         throw new Error('Invalid response format from server');
       }
       
-      setResult(data?.canvas || generateFallbackCanvas(formData));
-      toast.success('Canvas generated successfully!');
+      // Extract canvas content from the response
+      // The response format might be different than expected
+      let canvasContent = '';
+      
+      if (data) {
+        // Try different possible response structures
+        if (data.canvas) {
+          canvasContent = data.canvas;
+        } else if (Array.isArray(data) && data.length > 0) {
+          // If it's an array, try to find an object with output or canvas property
+          const firstItem = data[0];
+          canvasContent = firstItem.canvas || firstItem.output || JSON.stringify(firstItem);
+        } else if (typeof data === 'object') {
+          // If it's an object with no canvas property, stringify it
+          canvasContent = data.output || JSON.stringify(data);
+        } else if (typeof data === 'string') {
+          // If it's already a string
+          canvasContent = data;
+        }
+      }
+      
+      console.log('Extracted canvas content:', canvasContent);
+      
+      if (canvasContent) {
+        setResult(canvasContent);
+        toast.success('Canvas generated successfully!');
+      } else {
+        console.warn('No canvas content found in response, using fallback');
+        setResult(generateFallbackCanvas(formData));
+        toast.info('Used fallback canvas data');
+      }
     } catch (error) {
       console.error('Webhook error:', error);
       toast.error('Failed to generate canvas. Using fallback data.');
