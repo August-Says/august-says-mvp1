@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -19,8 +18,44 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
     toast.success('Share functionality will be available soon!');
   };
 
-  // Parse result into sections (this is a simplified example)
-  const sections = result.split('##').filter(section => section.trim());
+  const processContent = (content: string) => {
+    try {
+      const parsed = JSON.parse(content);
+      if (Array.isArray(parsed)) {
+        return parsed.flatMap(item => {
+          const output = item.output || item.canvas || '';
+          if (!output) return [];
+          return output.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
+        }).filter(section => section.trim());
+      } else if (typeof parsed === 'object' && (parsed.output || parsed.canvas)) {
+        const output = parsed.output || parsed.canvas;
+        return output.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
+      }
+    } catch (e) {
+      return content.split(/(?:##|\*\*(?:SUMMARY|QUESTION|OUTCOME|STRATEGIC IMPLICATIONS):\*\*)/);
+    }
+    return [content];
+  };
+
+  const getSectionTitle = (section: string, index: number): string => {
+    const sectionTypes = {
+      summary: 'Summary',
+      question: 'Question',
+      outcome: 'Outcome',
+      'strategic implications': 'Strategic Implications'
+    };
+
+    const sectionContent = section.toLowerCase();
+    for (const [key, value] of Object.entries(sectionTypes)) {
+      if (sectionContent.includes(key)) {
+        return value;
+      }
+    }
+    return `Section ${index + 1}`;
+  };
+
+  const processedResult = result;
+  const sections = processContent(processedResult);
   
   return (
     <motion.div 
@@ -53,21 +88,21 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
       <div className="space-y-8 text-white/90">
         {sections.length > 0 ? (
           sections.map((section, index) => {
-            // Parse section title and content
-            const lines = section.trim().split('\n');
-            const title = lines[0].trim();
-            const content = lines.slice(1).join('\n').trim();
+            const title = getSectionTitle(section, index);
+            const content = section.trim();
             
             return (
               <motion.div 
                 key={index}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: 0.1 * index }}
                 className="border-b border-white/10 pb-6 last:border-0"
               >
                 <h3 className="text-xl font-semibold text-white mb-3">{title}</h3>
-                <div className="text-white/80 whitespace-pre-line">{content}</div>
+                <div className="text-white/80 prose prose-sm prose-invert max-w-none">
+                  {renderMarkdownContent(content)}
+                </div>
               </motion.div>
             );
           })
@@ -82,12 +117,47 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         <Button
           onClick={onBack}
           variant="outline"
-          className="border-white/20 text-white hover:bg-white/10"
+          className="bg-cloudai-purple text-white hover:bg-cloudai-violetpurple border-transparent font-medium shadow-md"
         >
           Generate New Canvas
         </Button>
       </div>
     </motion.div>
+  );
+};
+
+const renderMarkdownContent = (content: string) => {
+  const lines = content.split('\n');
+  
+  return (
+    <div>
+      {lines.map((line, lineIndex) => {
+        if (line.trim().startsWith('-') || line.trim().startsWith('*')) {
+          return (
+            <div key={lineIndex} className="flex items-start space-x-2 my-1">
+              <span className="text-cloudai-purple">•</span>
+              <p>{line.trim().substring(1).trim()}</p>
+            </div>
+          );
+        }
+        
+        const numberedMatch = line.trim().match(/^(\d+)\.\s(.+)$/);
+        if (numberedMatch) {
+          return (
+            <div key={lineIndex} className="flex items-start space-x-2 my-1">
+              <span className="text-cloudai-purple min-w-[20px]">{numberedMatch[1]}.</span>
+              <p>{numberedMatch[2]}</p>
+            </div>
+          );
+        }
+        
+        if (line.trim() === '') {
+          return <div key={lineIndex} className="h-4"></div>;
+        }
+        
+        return <p key={lineIndex} className="my-1">{line}</p>;
+      })}
+    </div>
   );
 };
 

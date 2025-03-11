@@ -1,48 +1,63 @@
 
 import { motion } from 'framer-motion';
+import { RefreshCw } from 'lucide-react';
 
 interface LoadingAnimationProps {
   message?: string;
+  progress?: number;
 }
 
-const LoadingAnimation = ({ message = "Generating your canvas..." }: LoadingAnimationProps) => {
+const LoadingAnimation = ({ 
+  message = "Generating your canvas...", 
+  progress 
+}: LoadingAnimationProps) => {
   return (
     <div className="flex flex-col items-center justify-center space-y-6 py-12">
-      <div className="relative w-20 h-20">
-        <motion.div
-          initial={{ opacity: 0.3, scale: 0.8 }}
-          animate={{ 
-            opacity: [0.3, 1, 0.3],
-            scale: [0.8, 1, 0.8],
-          }}
-          transition={{ 
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute inset-0 rounded-full bg-cloudai-purple/30 backdrop-blur-sm"
-        />
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="relative w-24 h-24 flex items-center justify-center"
+      >
+        {/* Animated background circle */}
+        <div className="absolute inset-0 rounded-full bg-cloudai-purple/20 backdrop-blur-sm" />
         
+        {/* Rotating flywheel */}
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ 
-            duration: 3,
+            duration: 2,
             repeat: Infinity,
             ease: "linear"
           }}
           className="absolute inset-0 flex items-center justify-center"
         >
-          <svg className="w-12 h-12 text-white" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path 
-              d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12" 
-              stroke="currentColor" 
-              strokeWidth="2.5" 
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
+          <RefreshCw className="w-12 h-12 text-white" />
         </motion.div>
-      </div>
+        
+        {/* Progress indicator (optional) */}
+        {progress !== undefined && (
+          <div className="absolute inset-0">
+            <svg className="w-full h-full" viewBox="0 0 100 100">
+              <motion.circle
+                initial={{ pathLength: 0 }}
+                animate={{ pathLength: progress / 100 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                cx="50"
+                cy="50"
+                r="40"
+                fill="none"
+                stroke="rgba(255, 255, 255, 0.8)"
+                strokeWidth="4"
+                strokeDasharray="251.2"
+                strokeDashoffset="0"
+                strokeLinecap="round"
+                transform="rotate(-90 50 50)"
+              />
+            </svg>
+          </div>
+        )}
+      </motion.div>
       
       <motion.p 
         initial={{ opacity: 0 }}
