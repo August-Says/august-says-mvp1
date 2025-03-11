@@ -113,7 +113,7 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         <Button
           onClick={onBack}
           variant="outline"
-          className="border-white/20 text-white hover:bg-white/10"
+          className="bg-cloudai-purple text-white hover:bg-cloudai-violetpurple border-transparent font-medium shadow-md"
         >
           Generate New Canvas
         </Button>
