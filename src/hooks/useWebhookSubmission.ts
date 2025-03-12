@@ -18,8 +18,8 @@ export const useWebhookSubmission = (options?: WebhookOptions) => {
   const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistory[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
 
-  // Test webhook URL - using a more reliable test endpoint
-  const defaultWebhookUrl = 'https://webhook.site/715d27f7-f730-437c-8abe-cda82e04210e';
+  // Updated to a more reliable, CORS-enabled test webhook endpoint
+  const defaultWebhookUrl = 'https://webhook.site/fe6d08bb-574a-4a38-91ed-b5eb397528d9';
   const webhookUrl = options?.webhookUrl || defaultWebhookUrl;
 
   const navigateHistory = (direction: 'back' | 'forward') => {
@@ -40,6 +40,7 @@ export const useWebhookSubmission = (options?: WebhookOptions) => {
     setIsLoading(true);
     
     try {
+      // Build query parameters
       const queryParams = new URLSearchParams();
       
       // Add all params to query
@@ -55,21 +56,25 @@ export const useWebhookSubmission = (options?: WebhookOptions) => {
         console.log(`Sending ${contentKey} to webhook:`, contentValue.substring(0, 100) + '...');
       }
       
-      let responseData;
+      // Full URL for logging
       const fullUrl = `${webhookUrl}?${queryParams.toString()}`;
       console.log('Making request to:', fullUrl);
       
+      // Try POST request first (more reliable for large data)
       try {
-        // Attempt to make the fetch request with a timeout
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
         
-        const response = await fetch(fullUrl, {
-          method: 'GET',
+        const response = await fetch(webhookUrl, {
+          method: 'POST',
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
           },
+          body: JSON.stringify({
+            ...params,
+            ...(contentKey && contentValue ? { [contentKey]: contentValue } : {})
+          }),
           signal: controller.signal
         });
         
@@ -84,47 +89,59 @@ export const useWebhookSubmission = (options?: WebhookOptions) => {
         console.log('Raw response:', responseText);
         
         try {
-          responseData = responseText ? JSON.parse(responseText) : null;
+          const responseData = responseText ? JSON.parse(responseText) : null;
           console.log('Webhook response:', responseData);
+          
+          let resultData;
+          if (responseData) {
+            if (Array.isArray(responseData)) {
+              const combinedOutput = responseData
+                .map(item => item.output || item.canvas || '')
+                .join('\n\n---\n\n');
+              resultData = combinedOutput;
+            } else {
+              resultData = responseData.output || responseData.canvas || JSON.stringify(responseData);
+            }
+            
+            const historyEntry: SubmissionHistory = {
+              result: resultData,
+              params,
+              contentValue
+            };
+            setSubmissionHistory(prev => [...prev, historyEntry]);
+            setCurrentHistoryIndex(prev => prev + 1);
+            
+            setResult(resultData);
+            toast.success('Canvas generated successfully!');
+            return responseData;
+          } else {
+            throw new Error('No data received from webhook');
+          }
         } catch (parseError) {
           console.warn('Response was not JSON, using as plain text');
-          responseData = { output: responseText };
+          const resultData = responseText || 'No content generated, please try again.';
+          
+          const historyEntry: SubmissionHistory = {
+            result: resultData,
+            params,
+            contentValue
+          };
+          setSubmissionHistory(prev => [...prev, historyEntry]);
+          setCurrentHistoryIndex(prev => prev + 1);
+          
+          setResult(resultData);
+          toast.success('Canvas generated successfully!');
+          return { output: resultData };
         }
       } catch (fetchError) {
         console.error('Fetch error:', fetchError);
         throw new Error(`Failed to connect to webhook: ${fetchError.message}`);
       }
-      
-      let resultData;
-      if (responseData) {
-        if (Array.isArray(responseData)) {
-          const combinedOutput = responseData
-            .map(item => item.output || item.canvas || '')
-            .join('\n\n---\n\n');
-          resultData = combinedOutput;
-        } else {
-          resultData = responseData.output || responseData.canvas || JSON.stringify(responseData);
-        }
-        
-        const historyEntry: SubmissionHistory = {
-          result: resultData,
-          params,
-          contentValue
-        };
-        setSubmissionHistory(prev => [...prev, historyEntry]);
-        setCurrentHistoryIndex(prev => prev + 1);
-        
-        setResult(resultData);
-        toast.success('Canvas generated successfully!');
-        return responseData;
-      } else {
-        throw new Error('No data received from webhook');
-      }
     } catch (error) {
       console.error('Webhook error:', error);
       toast.error(`Failed to generate content: ${error.message}`);
       
-      // Set error message instead of fallback content
+      // Set error message 
       const errorMessage = 'No content generated, please try again.';
       
       // Add error message to history
