@@ -1,28 +1,10 @@
 
-export interface MaterialUniforms {
-  [key: string]: WebGLUniformLocation;
-}
-
-export interface MaterialClass {
-  vertexShader: WebGLShader;
-  fragmentShaderSource: string;
-  programs: { [key: number]: WebGLProgram };
-  activeProgram: WebGLProgram | null;
-  uniforms: MaterialUniforms;
-  setKeywords: (keywords: string[]) => void;
-  bind: () => void;
-}
-
-export interface ProgramClass {
-  uniforms: { [key: string]: WebGLUniformLocation };
-  program: WebGLProgram;
-  bind: () => void;
-}
-
-export interface Color {
-  r: number;
-  g: number;
-  b: number;
+export interface WebGLContext extends WebGLRenderingContext {
+  R16F?: number;
+  RG16F?: number;
+  RGBA16F?: number;
+  RG?: number;
+  RED?: number;
 }
 
 export interface SplashCursorConfig {
@@ -38,6 +20,17 @@ export interface SplashCursorConfig {
   SPLAT_FORCE: number;
   SHADING: boolean;
   COLOR_UPDATE_SPEED: number;
-  BACK_COLOR: Color;
+  BACK_COLOR: { r: number; g: number; b: number };
   TRANSPARENT: boolean;
+}
+
+export interface WebGLProps {
+  gl: WebGLContext;
+  ext: {
+    formatRGBA: { internalFormat: number; format: number };
+    formatRG: { internalFormat: number; format: number };
+    formatR: { internalFormat: number; format: number };
+    halfFloatTexType: number;
+    supportLinearFiltering: boolean;
+  };
 }

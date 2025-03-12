@@ -1,109 +1,159 @@
+import { WebGLContext } from './types';
 
-import { MaterialClass, ProgramClass } from './types';
+export const initWebGL = (canvas: HTMLCanvasElement): WebGLContext | null => {
+  const params = {
+    alpha: true,
+    depth: false,
+    stencil: false,
+    antialias: false,
+    preserveDrawingBuffer: false,
+  };
 
-export class Material implements MaterialClass {
-  vertexShader: WebGLShader;
-  fragmentShaderSource: string;
-  programs: { [key: number]: WebGLProgram };
-  activeProgram: WebGLProgram | null;
-  uniforms: { [key: string]: WebGLUniformLocation };
-  gl: WebGLRenderingContext;
+  // Try WebGL2 first
+  let gl = canvas.getContext('webgl2', params) as WebGLContext;
+  const isWebGL2 = !!gl;
 
-  constructor(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShaderSource: string) {
-    this.gl = gl;
-    this.vertexShader = vertexShader;
-    this.fragmentShaderSource = fragmentShaderSource;
-    this.programs = {};
-    this.activeProgram = null;
-    this.uniforms = {};
+  // Fall back to WebGL1 if needed
+  if (!gl) {
+    gl = (canvas.getContext('webgl', params) || 
+         canvas.getContext('experimental-webgl', params)) as WebGLContext;
   }
 
-  setKeywords(keywords: string[]) {
-    let hash = 0;
-    for (let i = 0; i < keywords.length; i++) hash += hashCode(keywords[i]);
-    let program = this.programs[hash];
-    if (program == null) {
-      let fragmentShader = compileShader(
-        this.gl,
-        this.gl.FRAGMENT_SHADER,
-        this.fragmentShaderSource,
-        keywords
-      );
-      program = createProgram(this.gl, this.vertexShader, fragmentShader);
-      this.programs[hash] = program;
-    }
-    if (program === this.activeProgram) return;
-    this.uniforms = getUniforms(this.gl, program);
-    this.activeProgram = program;
+  if (!gl) return null;
+
+  // Add WebGL2 constants for WebGL1 context
+  if (!isWebGL2) {
+    gl.R16F = 0x822D;
+    gl.RG16F = 0x822F;
+    gl.RGBA16F = 0x881A;
+    gl.RG = 0x8227;
+    gl.RED = 0x1903;
   }
 
-  bind() {
-    this.gl.useProgram(this.activeProgram);
-  }
-}
+  return gl;
+};
 
-export class Program implements ProgramClass {
-  uniforms: { [key: string]: WebGLUniformLocation };
-  program: WebGLProgram;
-  gl: WebGLRenderingContext;
+export const createShader = (
+  gl: WebGLContext,
+  type: number,
+  source: string
+): WebGLShader | null => {
+  const shader = gl.createShader(type);
+  if (!shader) return null;
 
-  constructor(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
-    this.gl = gl;
-    this.program = createProgram(gl, vertexShader, fragmentShader);
-    this.uniforms = getUniforms(gl, this.program);
-  }
-
-  bind() {
-    this.gl.useProgram(this.program);
-  }
-}
-
-// Helper functions
-export function createProgram(gl: WebGLRenderingContext, vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
-  let program = gl.createProgram() as WebGLProgram;
-  gl.attachShader(program, vertexShader);
-  gl.attachShader(program, fragmentShader);
-  gl.linkProgram(program);
-  if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-    console.trace(gl.getProgramInfoLog(program));
-  return program;
-}
-
-export function compileShader(gl: WebGLRenderingContext, type: number, source: string, keywords: string[] = []): WebGLShader {
-  source = addKeywords(source, keywords);
-  const shader = gl.createShader(type) as WebGLShader;
   gl.shaderSource(shader, source);
   gl.compileShader(shader);
-  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
-    console.trace(gl.getShaderInfoLog(shader));
+
+  if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+    console.error('Shader compile error:', gl.getShaderInfoLog(shader));
+    gl.deleteShader(shader);
+    return null;
+  }
+
   return shader;
-}
+};
 
-export function getUniforms(gl: WebGLRenderingContext, program: WebGLProgram) {
-  let uniforms: { [key: string]: WebGLUniformLocation } = {};
-  let uniformCount = gl.getProgramParameter(program, gl.ACTIVE_UNIFORMS);
-  for (let i = 0; i < uniformCount; i++) {
-    let uniformName = gl.getActiveUniform(program, i)!.name;
-    uniforms[uniformName] = gl.getUniformLocation(program, uniformName) as WebGLUniformLocation;
+export const compileShader = (
+  gl: WebGLContext,
+  type: number,
+  source: string,
+  defines: string[] = []
+): WebGLShader | null => {
+  const defineStr = defines.map(define => `#define ${define}\n`).join('');
+  const shaderSource = defineStr + source;
+  return createShader(gl, type, shaderSource);
+};
+
+export class Program {
+  gl: WebGLContext;
+  program: WebGLProgram | null;
+
+  constructor(gl: WebGLContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
+    this.gl = gl;
+    this.program = gl.createProgram();
+
+    if (!this.program) {
+      console.error('Failed to create program');
+      return;
+    }
+
+    gl.attachShader(this.program, vertexShader);
+    gl.attachShader(this.program, fragmentShader);
+    gl.linkProgram(this.program);
+
+    if (!gl.getProgramParameter(this.program, gl.LINK_STATUS)) {
+      console.error('Failed to link program:', gl.getProgramInfoLog(this.program));
+      gl.deleteProgram(this.program);
+      this.program = null;
+    }
   }
-  return uniforms;
-}
 
-function addKeywords(source: string, keywords: string[]): string {
-  if (!keywords.length) return source;
-  let keywordsString = '';
-  keywords.forEach((keyword) => {
-    keywordsString += "#define " + keyword + "\n";
-  });
-  return keywordsString + source;
-}
-
-export function hashCode(s: string): number {
-  if (s.length === 0) return 0;
-  let hash = 0;
-  for (let i = 0; i < s.length; i++) {
-    hash = (hash << 5) - hash + s.charCodeAt(i);
-    hash |= 0;
+  bind() {
+    if (this.program) {
+      this.gl.useProgram(this.program);
+    }
   }
-  return hash;
+
+  unbind() {
+    this.gl.useProgram(null);
+  }
+
+  uniforms(uniforms: { [name: string]: any }) {
+    if (!this.program) return;
+
+    this.bind();
+    for (const name in uniforms) {
+      if (!uniforms.hasOwnProperty(name)) continue;
+
+      const value = uniforms[name];
+      const location = this.gl.getUniformLocation(this.program, name);
+
+      if (location === null) {
+        console.warn(`Uniform '${name}' not found in shader`);
+        continue;
+      }
+
+      if (value instanceof Array) {
+        if (value.length === 2) {
+          this.gl.uniform2fv(location, value);
+        } else if (value.length === 3) {
+          this.gl.uniform3fv(location, value);
+        } else if (value.length === 4) {
+          this.gl.uniform4fv(location, value);
+        } else {
+          console.warn(`Unsupported array length for uniform '${name}': ${value.length}`);
+        }
+      } else if (typeof value === 'number') {
+        this.gl.uniform1f(location, value);
+      } else if (typeof value === 'boolean') {
+        this.gl.uniform1i(location, value ? 1 : 0);
+      } else if (value instanceof Float32Array) {
+        this.gl.uniform1fv(location, value);
+      } else {
+        console.warn(`Unsupported type for uniform '${name}': ${typeof value}`);
+      }
+    }
+  }
+}
+
+export class Material {
+  gl: WebGLContext;
+  program: Program;
+  uniforms: { [name: string]: any };
+
+  constructor(gl: WebGLContext, program: Program, uniforms: { [name: string]: any } = {}) {
+    this.gl = gl;
+    this.program = program;
+    this.uniforms = uniforms;
+  }
+
+  setUniforms(uniforms: { [name: string]: any }) {
+    this.uniforms = { ...this.uniforms, ...uniforms };
+    this.program.uniforms(this.uniforms);
+  }
+
+  bind() {
+    this.program.bind();
+    this.program.uniforms(this.uniforms);
+  }
 }
