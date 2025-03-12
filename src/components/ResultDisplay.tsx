@@ -1,8 +1,10 @@
-import React from 'react';
+
+import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Download, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
+import html2pdf from 'html2pdf.js';
 
 interface ResultDisplayProps {
   result: string;
@@ -10,8 +12,36 @@ interface ResultDisplayProps {
 }
 
 const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+
   const handleExportPDF = () => {
-    toast.success('PDF export functionality will be available soon!');
+    if (!contentRef.current) {
+      toast.error('Could not generate PDF. Please try again.');
+      return;
+    }
+    
+    toast.info('Preparing your PDF...');
+    
+    const element = contentRef.current;
+    const opt = {
+      margin: [10, 10, 10, 10],
+      filename: 'marketing-canvas.pdf',
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, logging: false },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    
+    // Small delay to allow toast to show
+    setTimeout(() => {
+      html2pdf().from(element).set(opt).save()
+        .then(() => {
+          toast.success('PDF downloaded successfully!');
+        })
+        .catch((error) => {
+          console.error('PDF generation error:', error);
+          toast.error('Failed to generate PDF. Please try again.');
+        });
+    }, 300);
   };
 
   const handleShare = () => {
@@ -117,7 +147,7 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         </div>
       </div>
       
-      <div className="space-y-8 text-white/90">
+      <div ref={contentRef} className="space-y-8 text-white/90">
         {processedSections.length > 0 ? (
           processedSections.map((section, index) => {
             const title = formatSectionTitle(section.title);
