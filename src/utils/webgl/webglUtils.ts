@@ -1,4 +1,4 @@
-import { WebGLContext } from './types';
+import { WebGLContext, ShaderUniforms } from './types';
 
 export const initWebGL = (canvas: HTMLCanvasElement): WebGLContext | null => {
   const params = {
@@ -67,10 +67,12 @@ export const compileShader = (
 export class Program {
   gl: WebGLContext;
   program: WebGLProgram | null;
+  uniforms: ShaderUniforms;
 
   constructor(gl: WebGLContext, vertexShader: WebGLShader, fragmentShader: WebGLShader) {
     this.gl = gl;
     this.program = gl.createProgram();
+    this.uniforms = {};
 
     if (!this.program) {
       console.error('Failed to create program');
@@ -85,6 +87,15 @@ export class Program {
       console.error('Failed to link program:', gl.getProgramInfoLog(this.program));
       gl.deleteProgram(this.program);
       this.program = null;
+      return;
+    }
+
+    // Get uniforms
+    const numUniforms = gl.getProgramParameter(this.program, gl.ACTIVE_UNIFORMS);
+    for (let i = 0; i < numUniforms; i++) {
+      const uniformInfo = gl.getActiveUniform(this.program, i);
+      if (!uniformInfo) continue;
+      this.uniforms[uniformInfo.name] = gl.getUniformLocation(this.program, uniformInfo.name);
     }
   }
 
@@ -98,7 +109,7 @@ export class Program {
     this.gl.useProgram(null);
   }
 
-  uniforms(uniforms: { [name: string]: any }) {
+  setUniforms(uniforms: { [name: string]: any }) {
     if (!this.program) return;
 
     this.bind();
@@ -106,22 +117,26 @@ export class Program {
       if (!uniforms.hasOwnProperty(name)) continue;
 
       const value = uniforms[name];
-      const location = this.gl.getUniformLocation(this.program, name);
+      const location = this.uniforms[name];
 
       if (location === null) {
         console.warn(`Uniform '${name}' not found in shader`);
         continue;
       }
 
-      if (value instanceof Array) {
-        if (value.length === 2) {
-          this.gl.uniform2fv(location, value);
-        } else if (value.length === 3) {
-          this.gl.uniform3fv(location, value);
-        } else if (value.length === 4) {
-          this.gl.uniform4fv(location, value);
-        } else {
-          console.warn(`Unsupported array length for uniform '${name}': ${value.length}`);
+      if (Array.isArray(value)) {
+        switch (value.length) {
+          case 2:
+            this.gl.uniform2fv(location, value);
+            break;
+          case 3:
+            this.gl.uniform3fv(location, value);
+            break;
+          case 4:
+            this.gl.uniform4fv(location, value);
+            break;
+          default:
+            console.warn(`Unsupported array length for uniform '${name}': ${value.length}`);
         }
       } else if (typeof value === 'number') {
         this.gl.uniform1f(location, value);
@@ -149,11 +164,11 @@ export class Material {
 
   setUniforms(uniforms: { [name: string]: any }) {
     this.uniforms = { ...this.uniforms, ...uniforms };
-    this.program.uniforms(this.uniforms);
+    this.program.setUniforms(this.uniforms);
   }
 
   bind() {
     this.program.bind();
-    this.program.uniforms(this.uniforms);
+    this.program.setUniforms(this.uniforms);
   }
 }
