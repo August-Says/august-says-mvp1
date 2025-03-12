@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -16,7 +15,6 @@ interface PdfUploadFormProps {
 
 const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps) => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
-  const [pdfContent, setPdfContent] = useState<string>('');
   const [textContent, setTextContent] = useState(initialTextContent);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -38,20 +36,6 @@ const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps
     return isValid;
   };
 
-  const handleFileChange = (file: File | null, content?: string) => {
-    setPdfFile(file);
-    if (content) {
-      setPdfContent(content);
-      console.log("PDF content extracted with length:", content.length);
-    } else {
-      setPdfContent('');
-    }
-    
-    if (errors.file) {
-      setErrors(prev => ({ ...prev, file: '' }));
-    }
-  };
-
   const handleSubmit = (e: React.FormEvent, activeTab: 'upload' | 'text') => {
     e.preventDefault();
     
@@ -63,9 +47,7 @@ const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps
     if (activeTab === 'text') {
       onSubmit(textContent, 'text');
     } else {
-      // If we have PDF content, send that, otherwise just send the file name
-      const contentToSend = pdfContent || `Uploaded PDF: ${pdfFile?.name}`;
-      onSubmit(contentToSend, 'upload');
+      onSubmit(pdfFile?.name || 'Uploaded PDF', 'upload');
     }
   };
 
@@ -96,25 +78,10 @@ const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps
             >
               <FileUpload
                 id="pdfFile"
-                onFileChange={handleFileChange}
+                onFileChange={setPdfFile}
                 error={errors.file}
               />
             </FormField>
-            
-            {pdfContent && (
-              <FormField 
-                label="Extracted PDF Content (Preview)" 
-                htmlFor="pdfContentPreview" 
-                className="mt-4"
-              >
-                <FormTextarea
-                  id="pdfContentPreview"
-                  value={pdfContent.substring(0, 500) + (pdfContent.length > 500 ? '...' : '')}
-                  readOnly
-                  rows={4}
-                />
-              </FormField>
-            )}
             
             <div className="mt-8 flex justify-center">
               <Button 

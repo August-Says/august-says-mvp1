@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { useWebhookSubmission } from './useWebhookSubmission';
 import { validateFormData } from '@/utils/formValidation';
+import { generateMarketingCanvas } from '@/utils/canvasGenerator';
 import { FormData, FORM_DATA_STORAGE_KEY } from '@/types/form';
 
 export type { FormData } from '@/types/form';
@@ -27,8 +28,10 @@ export const useFormSubmission = () => {
   
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Use the shared webhook submission hook
-  const { isLoading, result, setResult, callWebhook } = useWebhookSubmission();
+  // Use the shared webhook submission hook with a custom fallback generator
+  const { isLoading, result, setResult, callWebhook } = useWebhookSubmission({
+    fallbackGenerator: (data: string) => generateMarketingCanvas(data, formData)
+  });
 
   // Save form data to localStorage whenever it changes
   useEffect(() => {
