@@ -28,7 +28,9 @@ const Layout = ({ children }: LayoutProps) => {
   }, [location.pathname, navigate]);
 
   const openSupportChat = () => {
-    toast.success("Support chat will be available soon!");
+    // Open the n8n chat trigger URL in a new window
+    window.open('https://sonarai.app.n8n.cloud/webhook/57d81639-b698-4f15-b3aa-70c7070ec100/chat', '_blank');
+    toast.success("Support chat opened in a new window!");
   };
 
   return (
