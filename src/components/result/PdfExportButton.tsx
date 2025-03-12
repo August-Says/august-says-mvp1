@@ -21,9 +21,29 @@ const PdfExportButton = ({ contentRef }: PdfExportButtonProps) => {
     // Clone the content element to avoid styling issues
     const element = contentRef.current.cloneNode(true) as HTMLElement;
     
-    // Apply PDF-specific styling to the cloned element
+    // Create a container for the PDF content
+    const container = document.createElement('div');
+    container.style.padding = '20px';
+    container.style.background = 'white';
+    
+    // Add company logo to the top of the PDF
+    const logoContainer = document.createElement('div');
+    logoContainer.style.textAlign = 'center';
+    logoContainer.style.marginBottom = '20px';
+    
+    // Create logo image
+    const logoImg = document.createElement('img');
+    logoImg.src = '/your-logo.png'; // Replace with your actual logo path
+    logoImg.style.maxHeight = '60px';
+    logoImg.alt = 'Company Logo';
+    
+    // Append logo and content to container
+    logoContainer.appendChild(logoImg);
+    container.appendChild(logoContainer);
+    container.appendChild(element);
+    
+    // Apply PDF-specific styling to the content
     element.style.width = '100%';
-    element.style.padding = '20px';
     element.style.background = 'white';
     element.style.color = 'black';
     
@@ -61,7 +81,7 @@ const PdfExportButton = ({ contentRef }: PdfExportButtonProps) => {
     
     // Small delay to allow toast to show
     setTimeout(() => {
-      html2pdf().from(element).set(opt).save()
+      html2pdf().from(container).set(opt).save()
         .then(() => {
           toast.success('PDF downloaded successfully!');
         })
