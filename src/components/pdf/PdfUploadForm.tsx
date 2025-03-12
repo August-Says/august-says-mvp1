@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -46,21 +47,29 @@ const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps
       return;
     }
     
-    if (tab === 'text') {
-      onSubmit(textContent, 'text');
-    } else if (extractedText) {
+    // If extractedText exists and we're in upload tab, use that instead
+    if (tab === 'upload' && extractedText) {
+      console.log('Submitting extracted text:', extractedText.substring(0, 100) + '...');
       onSubmit(extractedText, 'text');
+    } else if (tab === 'text') {
+      console.log('Submitting text content:', textContent.substring(0, 100) + '...');
+      onSubmit(textContent, 'text');
     } else {
-      onSubmit(pdfFile?.name || 'Uploaded PDF', 'upload');
+      // Fallback for upload without extraction
+      console.log('Submitting file name (no extracted text)');
+      onSubmit(`Content from PDF: ${pdfFile?.name || 'Uploaded PDF'}`, 'upload');
     }
   };
 
   const handleTextExtracted = (text: string) => {
+    console.log('Text extracted, length:', text.length);
     setExtractedText(text);
-    toast.success("Text successfully extracted from PDF");
     
-    setActiveTab('text');
+    // Also update the text content field and switch to text tab
     setTextContent(text);
+    setActiveTab('text');
+    
+    toast.success("Text successfully extracted from PDF");
   };
 
   return (

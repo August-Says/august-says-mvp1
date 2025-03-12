@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWebhookSubmission } from '@/hooks/useWebhookSubmission';
@@ -13,52 +14,37 @@ const PdfUpload = () => {
   const generateFallbackCanvas = (content: string) => {
     return `# Generated Marketing Canvas
 
-## Executive Summary
+## SUMMARY
 A comprehensive marketing strategy based on the provided content. This canvas outlines key objectives, target audience insights, and actionable recommendations.
 
-## Strategic Objectives
+## OBJECTIVE
 1. Increase brand awareness among target demographics
 2. Improve customer engagement metrics across channels
 3. Drive conversion rates through optimized customer journeys
 4. Strengthen brand positioning against competitors
 
-**QUESTION:** How can we effectively increase brand awareness?
-
 ${content.substring(0, 200)}${content.length > 200 ? '...' : ''}
 
-## Target Audience Analysis
+## THE OUTCOME
 Detailed breakdown of primary and secondary audience segments with behavioral patterns, preferences, and pain points identified through data analysis.
 
-## Key Messages
+## STRATEGIC IMPLICATIONS
 - Primary message: Focus on value proposition and unique selling points
 - Secondary messages: Address specific audience needs and objections
 - Tone and voice recommendations for consistent communication
 
-## Channel Strategy
+## WHAT IS A CANVASS
 Multi-channel approach with specific focus on:
 - Digital (social media, content marketing, email)
 - Traditional media placement
 - Direct marketing initiatives
 - Sales enablement
 
-## Implementation Timeline
+## RECOMMENDED CANVASS FORMAT
 - Phase 1 (Weeks 1-4): Planning and asset development
 - Phase 2 (Weeks 5-8): Initial launch and channel activation
 - Phase 3 (Weeks 9-12): Optimization based on early performance data
-- Phase 4 (Weeks 13-16): Scale successful tactics and refine approach
-
-## Budget Allocation
-Recommended budget distribution across channels and initiatives with flexibility for optimization during campaign execution.
-
-## Success Metrics
-- Brand awareness metrics
-- Engagement rates
-- Conversion metrics
-- ROI calculations
-- Customer satisfaction scores
-
-## Risk Assessment
-Potential challenges and mitigation strategies to ensure campaign resilience and adaptability.`;
+- Phase 4 (Weeks 13-16): Scale successful tactics and refine approach`;
   };
   
   const { 
@@ -77,13 +63,16 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
 
   const handleFormSubmit = async (content: string, type: 'upload' | 'text') => {
     const params: Record<string, string> = {};
+    console.log(`Form submit with type: ${type}, content length: ${content.length}`);
     setTextContent(content);
     
     if (type === 'text') {
+      console.log('Submitting text content to webhook');
       await callWebhook(params, 'textContent', content);
     } else {
+      console.log('Submitting file upload to webhook');
       params.pdfUploaded = 'true';
-      await callWebhook(params);
+      await callWebhook(params, 'pdfContent', content);
     }
   };
 
@@ -103,7 +92,7 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
   };
 
   if (isLoading) {
-    return <LoadingContent />;
+    return <LoadingContent message="Generating your marketing canvas..." />;
   }
   
   if (result) {

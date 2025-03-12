@@ -34,12 +34,19 @@ export const FileUpload = ({
       if (file.type === 'application/pdf' && onTextExtracted) {
         setIsProcessing(true);
         try {
+          console.log('Starting PDF extraction');
           const arrayBuffer = await file.arrayBuffer();
           const buffer = new Uint8Array(arrayBuffer);
+          console.log('Buffer created, calling pdfParse');
           const data = await pdfParse(buffer);
+          console.log('PDF parsing complete, text length:', data.text.length);
           onTextExtracted(data.text);
         } catch (error) {
           console.error('Error parsing PDF:', error);
+          // If extraction fails, at least provide the file name so the form can still submit
+          if (onTextExtracted) {
+            onTextExtracted(`Failed to extract text from ${file.name}. Error: ${error}`);
+          }
         } finally {
           setIsProcessing(false);
         }
