@@ -150,7 +150,8 @@ export default {
 			},
 			backgroundImage: {
 				'gradient-canvas': 'linear-gradient(130deg, #6330B4 0%, #3055B5 100%)',
-				'gradient-cloudai': 'linear-gradient(150deg, #6330B4 0%, #120E29 40%, #3055B5 100%)',
+				'gradient-cloudai': 'linear-gradient(150deg, #120E29 0%, #301E63 40%, #2C3494 100%)',
+				'gradient-deepspace': 'linear-gradient(to bottom, #120E29 0%, #301E63 50%, #2C3494 100%)',
 			},
 		}
 	},

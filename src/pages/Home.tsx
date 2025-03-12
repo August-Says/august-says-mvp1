@@ -8,7 +8,7 @@ const Home = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col items-center justify-center flex-1 p-4 md:p-8 animate-fade-in relative z-10 bg-gradient-to-b from-purple-900/50 to-blue-900/30">
+    <div className="flex flex-col items-center justify-center flex-1 p-4 md:p-8 animate-fade-in relative z-10">
       <div className="max-w-3xl w-full text-center mb-12 pt-8 md:pt-12">
         <motion.h1 
           initial={{ opacity: 0, y: 20 }}
@@ -44,7 +44,7 @@ const Home = () => {
               </p>
               <Button 
                 onClick={() => navigate('/fields')} 
-                className="bg-white text-august-purple hover:bg-white/90 font-medium"
+                className="bg-white text-[#301E63] hover:bg-white/90 font-medium"
               >
                 Start with Fields
               </Button>
@@ -67,7 +67,7 @@ const Home = () => {
               </p>
               <Button 
                 onClick={() => navigate('/pdf')} 
-                className="bg-white text-august-purple hover:bg-white/90 font-medium"
+                className="bg-white text-[#301E63] hover:bg-white/90 font-medium"
               >
                 Start with PDF
               </Button>

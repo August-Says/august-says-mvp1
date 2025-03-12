@@ -34,7 +34,7 @@ const Layout = ({ children }: LayoutProps) => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-august-purple/90 to-august-blue/70 overflow-hidden relative">
+    <div className="min-h-screen flex flex-col bg-gradient-to-b from-[#120E29] via-[#301E63] to-[#2C3494] overflow-hidden relative">
       {isAuthenticated && <Navbar />}
       <main className={`flex-1 ${isAuthenticated ? 'pt-16' : ''} flex flex-col`}>
         {children}
