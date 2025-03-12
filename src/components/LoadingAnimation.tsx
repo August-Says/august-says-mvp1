@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import { RefreshCw } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
+import { AnimatedCircularProgressBar } from '@/components/ui/animated-circular-progress-bar';
 
 interface LoadingAnimationProps {
   message?: string;
@@ -13,7 +14,6 @@ const LoadingAnimation = ({
   progress 
 }: LoadingAnimationProps) => {
   const [pulsateAnimation, setPulsateAnimation] = useState<boolean>(true);
-  const [progressClass, setProgressClass] = useState<string>("");
   const [displayProgress, setDisplayProgress] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState<number>(0);
   
@@ -33,25 +33,31 @@ const LoadingAnimation = ({
     return () => clearInterval(timer);
   }, []);
   
-  // Determine the color class based on progress
+  // Update the display progress
   useEffect(() => {
     if (progress !== undefined) {
       setDisplayProgress(Math.min(Math.round(progress), 100));
       
       if (progress >= 100) {
         setPulsateAnimation(false);
-        setProgressClass("bg-gradient-to-r from-cloudai-purple via-cloudai-violetpurple to-cloudai-blue");
-      } else if (progress >= 85) {
-        setProgressClass("bg-gradient-to-r from-cloudai-blue to-cloudai-lightblue");
-      } else if (progress >= 55) {
-        setProgressClass("bg-gradient-to-r from-august-lightpurple to-august-purple");
-      } else if (progress >= 30) {
-        setProgressClass("bg-gradient-to-r from-august-purple to-august-accent");
-      } else {
-        setProgressClass("bg-gradient-to-r from-august-accent to-august-blue");
       }
     }
   }, [progress]);
+  
+  // Determine primary color based on progress
+  const getPrimaryColor = () => {
+    if (displayProgress >= 100) {
+      return "rgb(138, 43, 226)"; // BlueViolet
+    } else if (displayProgress >= 85) {
+      return "rgb(0, 191, 255)"; // DeepSkyBlue
+    } else if (displayProgress >= 55) {
+      return "rgb(153, 102, 204)"; // Medium purple
+    } else if (displayProgress >= 30) {
+      return "rgb(147, 112, 219)"; // Medium slate blue
+    } else {
+      return "rgb(30, 144, 255)"; // DodgerBlue
+    }
+  };
   
   return (
     <div className="flex flex-col items-center justify-center space-y-6 py-12">
@@ -59,12 +65,24 @@ const LoadingAnimation = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5 }}
-        className="relative w-24 h-24 flex items-center justify-center mb-6"
+        className="relative mb-6 flex items-center justify-center"
       >
-        {/* Animated background circle */}
-        <div className="absolute inset-0 rounded-full bg-cloudai-purple/20 backdrop-blur-sm" />
+        {/* Circular progress bar */}
+        <AnimatedCircularProgressBar
+          max={100}
+          min={0}
+          value={displayProgress}
+          gaugePrimaryColor={getPrimaryColor()}
+          gaugeSecondaryColor="rgba(255, 255, 255, 0.2)"
+          size={128}
+          strokeWidth={12}
+          showValue={true}
+          valueSize={32}
+          valueFontWeight={700}
+          valueColor="white"
+        />
         
-        {/* Rotating flywheel */}
+        {/* Rotating flywheel in the center */}
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ 
@@ -72,9 +90,9 @@ const LoadingAnimation = ({
             repeat: Infinity,
             ease: "linear"
           }}
-          className="absolute inset-0 flex items-center justify-center"
+          className="absolute"
         >
-          <RefreshCw className="w-12 h-12 text-white" />
+          <RefreshCw className="w-10 h-10 text-white/70" />
         </motion.div>
       </motion.div>
       
@@ -95,47 +113,6 @@ const LoadingAnimation = ({
         className="text-white/80 text-sm font-medium"
       >
         Time elapsed: {formatTime(elapsedTime)}
-      </motion.div>
-      
-      {/* Modern animated progress bar */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="w-full max-w-md mx-auto"
-      >
-        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-          <motion.div 
-            className={`h-full ${progressClass}`}
-            initial={{ width: "0%" }}
-            animate={{ 
-              width: `${displayProgress}%`,
-              transition: { duration: 0.5, ease: "easeOut" }
-            }}
-            style={{
-              boxShadow: "0 0 10px rgba(255, 255, 255, 0.5)"
-            }}
-          >
-            <motion.div
-              className="h-full w-20 absolute"
-              animate={{
-                x: ["0%", "100%"],
-                opacity: [0, 1, 0],
-              }}
-              transition={{
-                repeat: Infinity,
-                duration: 1.5,
-                ease: "linear",
-              }}
-              style={{
-                background: "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)"
-              }}
-            />
-          </motion.div>
-        </div>
-        <div className="mt-2 text-white/80 text-xs font-medium text-center">
-          Progress: {displayProgress}%
-        </div>
       </motion.div>
       
       {/* Pulsating dots - only show when not complete */}
