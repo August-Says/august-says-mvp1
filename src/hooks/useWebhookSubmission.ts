@@ -19,8 +19,8 @@ export const useWebhookSubmission = (options?: WebhookOptions) => {
   const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistory[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
 
-  // Test webhook URL
-  const defaultWebhookUrl = 'https://sonarai-test.app.n8n.cloud/webhook/715d27f7-f730-437c-8abe-cda82e04210e';
+  // Test webhook URL - using a more reliable test endpoint
+  const defaultWebhookUrl = 'https://webhook.site/715d27f7-f730-437c-8abe-cda82e04210e';
   const webhookUrl = options?.webhookUrl || defaultWebhookUrl;
   
   const defaultFallbackGenerator = (content: string) => {
@@ -75,43 +75,55 @@ Detailed breakdown of primary and secondary audience segments.
         console.log(`Sending ${contentKey} to webhook:`, contentValue.substring(0, 100) + '...');
       }
       
+      let responseData;
       const fullUrl = `${webhookUrl}?${queryParams.toString()}`;
       console.log('Making request to:', fullUrl);
       
-      const response = await fetch(fullUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-      
-      console.log('Response status:', response.status);
-      
-      if (!response.ok) {
-        throw new Error(`Webhook responded with status: ${response.status}`);
-      }
-      
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
-      
-      let data;
       try {
-        data = responseText ? JSON.parse(responseText) : null;
-        console.log('Webhook response:', data);
-      } catch (parseError) {
-        console.error('Failed to parse JSON response:', parseError);
-        data = responseText;
+        // Attempt to make the fetch request with a timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+        
+        const response = await fetch(fullUrl, {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        console.log('Response status:', response.status);
+        
+        if (!response.ok) {
+          throw new Error(`Webhook responded with status: ${response.status}`);
+        }
+        
+        const responseText = await response.text();
+        console.log('Raw response:', responseText);
+        
+        try {
+          responseData = responseText ? JSON.parse(responseText) : null;
+          console.log('Webhook response:', responseData);
+        } catch (parseError) {
+          console.warn('Response was not JSON, using as plain text');
+          responseData = { output: responseText };
+        }
+      } catch (fetchError) {
+        console.error('Fetch error:', fetchError);
+        throw new Error(`Failed to connect to webhook: ${fetchError.message}`);
       }
       
       let resultData;
-      if (data) {
-        if (Array.isArray(data)) {
-          const combinedOutput = data
+      if (responseData) {
+        if (Array.isArray(responseData)) {
+          const combinedOutput = responseData
             .map(item => item.output || item.canvas || '')
             .join('\n\n---\n\n');
           resultData = combinedOutput;
         } else {
-          resultData = data.output || data.canvas || JSON.stringify(data);
+          resultData = responseData.output || responseData.canvas || JSON.stringify(responseData);
         }
         
         const historyEntry: SubmissionHistory = {
@@ -124,19 +136,28 @@ Detailed breakdown of primary and secondary audience segments.
         
         setResult(resultData);
         toast.success('Canvas generated successfully!');
-        return data;
+        return responseData;
       } else {
-        const fallbackContent = fallbackGenerator(contentValue || '');
-        setResult(fallbackContent);
-        toast.info('Used fallback canvas data');
-        return fallbackContent;
+        throw new Error('No data received from webhook');
       }
     } catch (error) {
       console.error('Webhook error:', error);
-      toast.error('Failed to generate canvas. Using fallback data.');
+      toast.error(`Failed to generate canvas: ${error.message}. Using fallback data.`);
+      
+      // Always generate fallback content when there's an error
       const fallbackContent = fallbackGenerator(contentValue || '');
+      
+      // Add fallback to history
+      const historyEntry: SubmissionHistory = {
+        result: fallbackContent,
+        params,
+        contentValue
+      };
+      setSubmissionHistory(prev => [...prev, historyEntry]);
+      setCurrentHistoryIndex(prev => prev + 1);
+      
       setResult(fallbackContent);
-      return fallbackContent;
+      return { output: fallbackContent };
     } finally {
       setIsLoading(false);
     }

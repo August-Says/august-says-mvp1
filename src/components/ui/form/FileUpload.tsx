@@ -1,6 +1,7 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { toast } from 'sonner';
 
 interface FileUploadProps {
   id: string;
@@ -37,17 +38,36 @@ export const FileUpload = ({
           // Use a web worker to handle PDF parsing to avoid blocking the main thread
           const pdfWorker = new Worker(new URL('/src/workers/pdfWorker.js', import.meta.url));
           
+          // Set up a timeout in case the worker doesn't respond
+          const timeoutId = setTimeout(() => {
+            pdfWorker.terminate();
+            setIsLoading(false);
+            toast.error('PDF processing timed out. Please try a different file.');
+            onFileChange(file);
+          }, 30000); // 30 second timeout
+          
           pdfWorker.onmessage = (event) => {
+            clearTimeout(timeoutId);
             const { content, error } = event.data;
             setIsLoading(false);
             
             if (error) {
               console.error('PDF parsing error:', error);
+              toast.error('Could not extract text from PDF. Using file metadata only.');
               onFileChange(file);
             } else {
               console.log('PDF content extracted:', content.substring(0, 100) + '...');
+              toast.success('PDF text extracted successfully');
               onFileChange(file, content);
             }
+          };
+          
+          pdfWorker.onerror = (error) => {
+            clearTimeout(timeoutId);
+            console.error('Worker error:', error);
+            setIsLoading(false);
+            toast.error('Error processing PDF file. Using file metadata only.');
+            onFileChange(file);
           };
           
           pdfWorker.postMessage({ pdfData: uint8Array });
@@ -58,6 +78,7 @@ export const FileUpload = ({
       } catch (error) {
         console.error('Error processing file:', error);
         setIsLoading(false);
+        toast.error('Failed to process file. Using file metadata only.');
         onFileChange(file);
       }
     } else {
