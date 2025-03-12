@@ -19,8 +19,8 @@ export const useWebhookSubmission = (options?: WebhookOptions) => {
   const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistory[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
 
-  // Production webhook URL
-  const defaultWebhookUrl = 'https://sonarai.app.n8n.cloud/webhook/715d27f7-f730-437c-8abe-cda82e04210e';
+  // Test webhook URL
+  const defaultWebhookUrl = 'https://sonarai-test.app.n8n.cloud/webhook/715d27f7-f730-437c-8abe-cda82e04210e';
   const webhookUrl = options?.webhookUrl || defaultWebhookUrl;
   
   const defaultFallbackGenerator = (content: string) => {
