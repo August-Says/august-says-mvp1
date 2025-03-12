@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import ResultDisplay from '@/components/ResultDisplay';
 import MarketingForm from '@/components/MarketingForm';
 import { useFormSubmission } from '@/hooks/useFormSubmission';
-import { useState } from 'react';
 import LinearProgressBar from '@/components/LinearProgressBar';
 
 const FieldsForm = () => {
@@ -31,7 +30,7 @@ const FieldsForm = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
-        <LinearProgressBar isLoading={true} duration={15000} />
+        <LinearProgressBar isLoading={true} />
       </div>
     );
   }

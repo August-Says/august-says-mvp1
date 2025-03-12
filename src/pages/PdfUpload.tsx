@@ -73,7 +73,7 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     fallbackGenerator: generateFallbackCanvas
   });
 
-  const loadingProgress = useProgressAnimation(isLoading);
+  useProgressAnimation(isLoading);
 
   const handleFormSubmit = async (content: string, type: 'upload' | 'text') => {
     const params: Record<string, string> = {};
@@ -103,7 +103,7 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
   };
 
   if (isLoading) {
-    return <LoadingContent loadingProgress={loadingProgress} />;
+    return <LoadingContent />;
   }
   
   if (result) {
