@@ -15,6 +15,23 @@ const LoadingAnimation = ({
   const [pulsateAnimation, setPulsateAnimation] = useState<boolean>(true);
   const [progressClass, setProgressClass] = useState<string>("");
   const [displayProgress, setDisplayProgress] = useState<number>(0);
+  const [elapsedTime, setElapsedTime] = useState<number>(0);
+  
+  // Format the elapsed time as mm:ss
+  const formatTime = (timeInSeconds: number): string => {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = timeInSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+  
+  // Timer effect
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
   
   // Determine the color class based on progress
   useEffect(() => {
@@ -70,6 +87,16 @@ const LoadingAnimation = ({
         {message}
       </motion.p>
       
+      {/* Timer display */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.5 }}
+        className="text-white/80 text-sm font-medium"
+      >
+        Time elapsed: {formatTime(elapsedTime)}
+      </motion.div>
+      
       {/* Battle.net style progress bar */}
       <motion.div 
         initial={{ opacity: 0 }}
@@ -85,7 +112,7 @@ const LoadingAnimation = ({
               opacity: 1
             }}
           >
-            <span className="progress__text">
+            <span className="progress__text text-white">
               Progress: <em>{displayProgress}%</em>
             </span>
           </b>
