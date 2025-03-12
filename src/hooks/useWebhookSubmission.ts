@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 interface WebhookOptions {
-  fallbackGenerator?: (content: string) => string;
   webhookUrl?: string;
 }
 
@@ -22,25 +21,6 @@ export const useWebhookSubmission = (options?: WebhookOptions) => {
   // Test webhook URL - using a more reliable test endpoint
   const defaultWebhookUrl = 'https://webhook.site/715d27f7-f730-437c-8abe-cda82e04210e';
   const webhookUrl = options?.webhookUrl || defaultWebhookUrl;
-  
-  const defaultFallbackGenerator = (content: string) => {
-    return `# Generated Marketing Canvas
-
-## Executive Summary
-A comprehensive marketing strategy based on the provided content.
-
-${content.substring(0, 200)}${content.length > 200 ? '...' : ''}
-
-## Target Audience Analysis
-Detailed breakdown of primary and secondary audience segments.
-
-## Key Messages
-- Primary message: Focus on value proposition and unique selling points
-- Secondary messages: Address specific audience needs and objections
-- Tone and voice recommendations for consistent communication`;
-  };
-
-  const fallbackGenerator = options?.fallbackGenerator || defaultFallbackGenerator;
 
   const navigateHistory = (direction: 'back' | 'forward') => {
     const newIndex = direction === 'back' ? currentHistoryIndex - 1 : currentHistoryIndex + 1;
@@ -142,22 +122,22 @@ Detailed breakdown of primary and secondary audience segments.
       }
     } catch (error) {
       console.error('Webhook error:', error);
-      toast.error(`Failed to generate canvas: ${error.message}. Using fallback data.`);
+      toast.error(`Failed to generate content: ${error.message}`);
       
-      // Always generate fallback content when there's an error
-      const fallbackContent = fallbackGenerator(contentValue || '');
+      // Set error message instead of fallback content
+      const errorMessage = 'No content generated, please try again.';
       
-      // Add fallback to history
+      // Add error message to history
       const historyEntry: SubmissionHistory = {
-        result: fallbackContent,
+        result: errorMessage,
         params,
         contentValue
       };
       setSubmissionHistory(prev => [...prev, historyEntry]);
       setCurrentHistoryIndex(prev => prev + 1);
       
-      setResult(fallbackContent);
-      return { output: fallbackContent };
+      setResult(errorMessage);
+      return { output: errorMessage };
     } finally {
       setIsLoading(false);
     }
