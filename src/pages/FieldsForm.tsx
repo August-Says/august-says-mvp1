@@ -1,4 +1,3 @@
-
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -32,7 +31,7 @@ const FieldsForm = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
-        <LinearProgressBar isLoading={true} />
+        <LinearProgressBar isLoading={true} duration={15000} />
       </div>
     );
   }

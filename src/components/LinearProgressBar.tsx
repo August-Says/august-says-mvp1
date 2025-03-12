@@ -9,11 +9,15 @@ interface LinearProgressBarProps {
 const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarProps) => {
   const [progress, setProgress] = useState(0);
   const [animationStarted, setAnimationStarted] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [startTime, setStartTime] = useState<number | null>(null);
 
   useEffect(() => {
     if (isLoading && !animationStarted) {
       setAnimationStarted(true);
       setProgress(0);
+      setElapsedTime(0);
+      setStartTime(Date.now());
       
       const interval = setInterval(() => {
         setProgress(prev => {
@@ -26,16 +30,25 @@ const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarPro
         });
       }, duration / 100);
       
+      const timeInterval = setInterval(() => {
+        if (startTime) {
+          setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+        }
+      }, 1000);
+      
       return () => {
         clearInterval(interval);
+        clearInterval(timeInterval);
       };
     }
     
     if (!isLoading) {
       setAnimationStarted(false);
       setProgress(0);
+      setElapsedTime(0);
+      setStartTime(null);
     }
-  }, [isLoading, animationStarted, duration]);
+  }, [isLoading, animationStarted, duration, startTime]);
 
   if (!isLoading && !animationStarted) return null;
 
@@ -48,9 +61,9 @@ const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarPro
             className="absolute inset-0 bg-gradient-to-r from-blue-400 to-red-500 shadow-inner"
           ></div>
           
-          {/* Animated dark overlay that moves from right to left */}
+          {/* Animated dark overlay that moves from right to left as progress increases */}
           <div 
-            className="runner absolute inset-0 bg-gradient-to-b from-black to-gray-800"
+            className="absolute inset-0 bg-gradient-to-b from-black to-gray-800"
             style={{ 
               width: `${100 - progress}%`, 
               right: 0, 
@@ -62,7 +75,7 @@ const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarPro
           
           {/* Progress dot at the end of the bar */}
           <div 
-            className={`absolute top-1/2 transform -translate-y-1/2 right-0 w-4 h-4 rounded-full bg-gradient-to-b from-black to-gray-800 ${progress === 100 ? 'bg-red-500' : ''}`}
+            className={`absolute top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full bg-gradient-to-b from-black to-gray-800 ${progress === 100 ? 'bg-red-500' : ''}`}
             style={{ 
               right: `${progress === 100 ? '0' : 'calc(' + (100 - progress) + '% - 0.5rem)'}`,
               transition: 'right 0.3s ease-out'
@@ -86,8 +99,11 @@ const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarPro
         Analyzing your document and generating canvas...
       </p>
       
-      <div className="text-white/80 text-sm font-medium">
-        Please wait while we process your request
+      <div className="text-white/80 text-sm font-medium flex flex-col items-center gap-2">
+        <div>Please wait while we process your request</div>
+        <div className="text-lg font-semibold text-blue-300">
+          Time elapsed: {elapsedTime} seconds
+        </div>
       </div>
     </div>
   );
