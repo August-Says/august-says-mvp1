@@ -16,18 +16,20 @@ interface PdfUploadFormProps {
 const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps) => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [textContent, setTextContent] = useState(initialTextContent);
+  const [extractedText, setExtractedText] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<'upload' | 'text'>('upload');
 
-  const validateForm = (activeTab: 'upload' | 'text') => {
+  const validateForm = (tab: 'upload' | 'text') => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
     
-    if (activeTab === 'upload' && !pdfFile) {
+    if (tab === 'upload' && !pdfFile) {
       newErrors.file = 'Please upload a PDF file';
       isValid = false;
     }
     
-    if (activeTab === 'text' && !textContent.trim()) {
+    if (tab === 'text' && !textContent.trim()) {
       newErrors.text = 'Please enter some text content';
       isValid = false;
     }
@@ -36,24 +38,34 @@ const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent, activeTab: 'upload' | 'text') => {
+  const handleSubmit = (e: React.FormEvent, tab: 'upload' | 'text') => {
     e.preventDefault();
     
-    if (!validateForm(activeTab)) {
-      toast.error(`Please ${activeTab === 'upload' ? 'upload a PDF file' : 'enter some text content'}`);
+    if (!validateForm(tab)) {
+      toast.error(`Please ${tab === 'upload' ? 'upload a PDF file' : 'enter some text content'}`);
       return;
     }
     
-    if (activeTab === 'text') {
+    if (tab === 'text') {
       onSubmit(textContent, 'text');
+    } else if (extractedText) {
+      onSubmit(extractedText, 'text');
     } else {
       onSubmit(pdfFile?.name || 'Uploaded PDF', 'upload');
     }
   };
 
+  const handleTextExtracted = (text: string) => {
+    setExtractedText(text);
+    toast.success("Text successfully extracted from PDF");
+    
+    setActiveTab('text');
+    setTextContent(text);
+  };
+
   return (
     <div className="glass-morphism rounded-2xl p-6 sm:p-8 shadow-lg">
-      <Tabs defaultValue="upload" className="w-full">
+      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'upload' | 'text')} className="w-full">
         <TabsList className="grid w-full grid-cols-2 bg-white/10 text-white">
           <TabsTrigger 
             value="upload" 
@@ -79,6 +91,7 @@ const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps
               <FileUpload
                 id="pdfFile"
                 onFileChange={setPdfFile}
+                onTextExtracted={handleTextExtracted}
                 error={errors.file}
               />
             </FormField>
