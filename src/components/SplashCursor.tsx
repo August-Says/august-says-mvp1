@@ -1,10 +1,9 @@
-
 import { useEffect, useRef } from 'react';
 import { 
   Program, 
   compileShader, 
-  initWebGL, 
-  createFBO,
+  initWebGL,
+  createFBO, 
   createDoubleFBO
 } from '../utils/webgl/webglUtils';
 import { 
@@ -31,7 +30,6 @@ import {
 } from '../utils/webgl/splashCursorEvents';
 
 function SplashCursor(props: Partial<SplashCursorConfig>) {
-  // Merge provided props with default config
   const config: SplashCursorConfig = { ...defaultSplashCursorConfig, ...props };
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
@@ -61,7 +59,7 @@ function SplashCursor(props: Partial<SplashCursorConfig>) {
       format: gl.RED || gl.RGBA
     };
     
-    const halfFloatTexType = gl.HALF_FLOAT || 0x8D61; // 0x8D61 is HALF_FLOAT_OES
+    const halfFloatTexType = gl.HALF_FLOAT || gl.getExtension('OES_texture_half_float')?.HALF_FLOAT_OES || gl.UNSIGNED_BYTE;
     const supportLinearFiltering = gl.getExtension('OES_texture_float_linear') != null;
 
     // Set up canvas background
@@ -147,8 +145,6 @@ function SplashCursor(props: Partial<SplashCursorConfig>) {
     const mouseState = createMouseState();
 
     // Create event handler functions bound to this context
-    const handleMouseDownBound = (e: MouseEvent) => handleMouseDown(e, mouseState);
-    
     const handleMouseMoveBound = (e: MouseEvent) => handleMouseMove(
       e, 
       mouseState, 
@@ -157,16 +153,12 @@ function SplashCursor(props: Partial<SplashCursorConfig>) {
       canvas, 
       density, 
       velocity, 
-      config.SPLAT_FORCE, 
-      config.COLOR_UPDATE_SPEED, 
-      config.SPLAT_RADIUS,
+      config,
       dyeWidth,
       dyeHeight,
       simWidth,
       simHeight
     );
-    
-    const handleMouseUpBound = () => handleMouseUp(mouseState);
 
     // Main rendering loop
     let lastTime = Date.now();
@@ -202,8 +194,8 @@ function SplashCursor(props: Partial<SplashCursorConfig>) {
     // Set up event listeners
     canvas.addEventListener('mousedown', handleMouseDownBound);
     canvas.addEventListener('mousemove', handleMouseMoveBound);
-    canvas.addEventListener('mouseup', handleMouseUpBound);
-    canvas.addEventListener('mouseleave', handleMouseUpBound);
+    canvas.addEventListener('mouseup', handleMouseUp);
+    canvas.addEventListener('mouseleave', handleMouseUp);
     
     update();
     
@@ -211,8 +203,8 @@ function SplashCursor(props: Partial<SplashCursorConfig>) {
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDownBound);
       canvas.removeEventListener('mousemove', handleMouseMoveBound);
-      canvas.removeEventListener('mouseup', handleMouseUpBound);
-      canvas.removeEventListener('mouseleave', handleMouseUpBound);
+      canvas.removeEventListener('mouseup', handleMouseUp);
+      canvas.removeEventListener('mouseleave', handleMouseUp);
     };
   }, [
     props.SIM_RESOLUTION,
@@ -224,7 +216,13 @@ function SplashCursor(props: Partial<SplashCursorConfig>) {
     props.SHADING,
     props.COLOR_UPDATE_SPEED,
     props.BACK_COLOR,
-    props.TRANSPARENT
+    props.SPLASH_COLORS,
+    props.COLOR_MODE,
+    props.TRANSPARENT,
+    props.BLUR_ENABLED,
+    props.BLUR_ITERATIONS,
+    props.GLOW_ENABLED,
+    props.GLOW_INTENSITY
   ]);
 
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />;

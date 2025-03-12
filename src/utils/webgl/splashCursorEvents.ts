@@ -1,8 +1,7 @@
-
 import { addSplat } from './fluidSimulation';
 import { hslToRgb } from './colorUtils';
 import { Program } from './webglUtils';
-import { WebGLContext } from './types';
+import { WebGLContext, Color, SplashCursorConfig } from './types';
 
 // Mouse interaction state
 export interface MouseState {
@@ -38,9 +37,7 @@ export function handleMouseMove(
   canvas: HTMLCanvasElement,
   density: any,
   velocity: any,
-  SPLAT_FORCE: number,
-  COLOR_UPDATE_SPEED: number,
-  SPLAT_RADIUS: number,
+  config: SplashCursorConfig,
   dyeWidth: number,
   dyeHeight: number,
   simWidth: number,
@@ -54,11 +51,27 @@ export function handleMouseMove(
   const dx = mouseX - mouseState.lastMouseX;
   const dy = mouseY - mouseState.lastMouseY;
   
-  const velocityForce = { x: dx * SPLAT_FORCE, y: -dy * SPLAT_FORCE };
+  const velocityForce = { 
+    x: dx * config.SPLAT_FORCE, 
+    y: -dy * config.SPLAT_FORCE 
+  };
   
-  // Generate color based on counter
-  mouseState.colorCounter = (mouseState.colorCounter + COLOR_UPDATE_SPEED / 100) % 360;
-  const color = hslToRgb(mouseState.colorCounter, 0.7, 0.5);
+  // Color selection based on mode
+  let color: Color;
+  switch (config.COLOR_MODE) {
+    case 'single':
+      color = config.SPLASH_COLORS[0];
+      break;
+    case 'custom':
+      const colorIndex = Math.floor(Math.random() * config.SPLASH_COLORS.length);
+      color = config.SPLASH_COLORS[colorIndex];
+      break;
+    case 'rainbow':
+    default:
+      mouseState.colorCounter = (mouseState.colorCounter + config.COLOR_UPDATE_SPEED / 100) % 360;
+      color = hslToRgb(mouseState.colorCounter, 0.7, 0.5);
+      break;
+  }
   
   // Add splat at current mouse position
   addSplat(
@@ -72,7 +85,7 @@ export function handleMouseMove(
     velocityForce.x, 
     velocityForce.y, 
     color,
-    SPLAT_RADIUS,
+    config.SPLAT_RADIUS,
     dyeWidth,
     dyeHeight,
     simWidth,

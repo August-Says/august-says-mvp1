@@ -1,4 +1,3 @@
-
 import { WebGLContext, FrameBuffer, ExtensionFormats } from './types';
 import { Program } from './webglUtils';
 
@@ -57,18 +56,18 @@ export function addSplat(
 export function setupVertexArray(gl: WebGLContext) {
   let vertexArray = null;
   
-  // Check if createVertexArray is available (WebGL2)
-  if (typeof gl.createVertexArray === 'function') {
-    vertexArray = gl.createVertexArray();
-    gl.bindVertexArray(vertexArray);
-  } 
-  // Try to use the extension for WebGL1
-  else {
-    const ext = gl.getExtension('OES_vertex_array_object');
-    if (ext) {
-      vertexArray = ext.createVertexArrayOES();
-      ext.bindVertexArrayOES(vertexArray);
-    }
+  const vaoExt = gl.getExtension('OES_vertex_array_object');
+  
+  if (vaoExt) {
+    vertexArray = vaoExt.createVertexArrayOES();
+    vaoExt.bindVertexArrayOES(vertexArray);
+  } else {
+    // Fallback for browsers without VAO support
+    vertexArray = {
+      // Dummy object for compatibility
+      bind: () => {},
+      unbind: () => {}
+    };
   }
   
   return vertexArray;

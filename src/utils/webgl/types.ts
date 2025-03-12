@@ -1,4 +1,3 @@
-
 export interface Color {
   r: number;
   g: number;
@@ -71,6 +70,14 @@ export interface SplashCursorConfig {
   SPLAT_FORCE: number;
   SHADING: boolean;
   COLOR_UPDATE_SPEED: number;
+  
   BACK_COLOR: Color;
+  SPLASH_COLORS: Color[];
+  COLOR_MODE: 'single' | 'rainbow' | 'custom';
   TRANSPARENT: boolean;
+  
+  BLUR_ENABLED: boolean;
+  BLUR_ITERATIONS: number;
+  GLOW_ENABLED: boolean;
+  GLOW_INTENSITY: number;
 }
