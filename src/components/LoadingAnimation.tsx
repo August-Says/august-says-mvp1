@@ -40,15 +40,15 @@ const LoadingAnimation = ({
       
       if (progress >= 100) {
         setPulsateAnimation(false);
-        setProgressClass("progress__bar--blue");
+        setProgressClass("bg-gradient-to-r from-cloudai-purple via-cloudai-violetpurple to-cloudai-blue");
       } else if (progress >= 85) {
-        setProgressClass("progress__bar--green");
+        setProgressClass("bg-gradient-to-r from-cloudai-blue to-cloudai-lightblue");
       } else if (progress >= 55) {
-        setProgressClass("progress__bar--yellow");
+        setProgressClass("bg-gradient-to-r from-august-lightpurple to-august-purple");
       } else if (progress >= 30) {
-        setProgressClass("progress__bar--orange");
+        setProgressClass("bg-gradient-to-r from-august-purple to-august-accent");
       } else {
-        setProgressClass("");
+        setProgressClass("bg-gradient-to-r from-august-accent to-august-blue");
       }
     }
   }, [progress]);
@@ -97,25 +97,44 @@ const LoadingAnimation = ({
         Time elapsed: {formatTime(elapsedTime)}
       </motion.div>
       
-      {/* Battle.net style progress bar */}
+      {/* Modern animated progress bar */}
       <motion.div 
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.5, delay: 0.2 }}
         className="w-full max-w-md mx-auto"
       >
-        <div className="progress progress--active">
-          <b 
-            className={`progress__bar ${progressClass}`} 
-            style={{ 
+        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+          <motion.div 
+            className={`h-full ${progressClass}`}
+            initial={{ width: "0%" }}
+            animate={{ 
               width: `${displayProgress}%`,
-              opacity: 1
+              transition: { duration: 0.5, ease: "easeOut" }
+            }}
+            style={{
+              boxShadow: "0 0 10px rgba(255, 255, 255, 0.5)"
             }}
           >
-            <span className="progress__text text-white">
-              Progress: <em>{displayProgress}%</em>
-            </span>
-          </b>
+            <motion.div
+              className="h-full w-20 absolute"
+              animate={{
+                x: ["0%", "100%"],
+                opacity: [0, 1, 0],
+              }}
+              transition={{
+                repeat: Infinity,
+                duration: 1.5,
+                ease: "linear",
+              }}
+              style={{
+                background: "linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.8) 50%, rgba(255,255,255,0) 100%)"
+              }}
+            />
+          </motion.div>
+        </div>
+        <div className="mt-2 text-white/80 text-xs font-medium text-center">
+          Progress: {displayProgress}%
         </div>
       </motion.div>
       
