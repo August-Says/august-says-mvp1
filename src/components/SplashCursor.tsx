@@ -452,6 +452,86 @@ function SplashCursor({
     );
     const displayMaterial = new Material(gl, baseVertexShader, displayShaderSource);
 
+    function getResolution(resolution: number) {
+      let aspectRatio = canvas.width / canvas.height;
+      if (aspectRatio < 1) aspectRatio = 1.0 / aspectRatio;
+
+      let min = Math.round(resolution);
+      let max = Math.round(resolution * aspectRatio);
+
+      if (canvas.width > canvas.height) {
+        return { width: max, height: min };
+      } else {
+        return { width: min, height: max };
+      }
+    }
+
+    function scaleByPixelRatio(input: number) {
+      let pixelRatio = window.devicePixelRatio || 1;
+      return Math.floor(input * pixelRatio);
+    }
+
+    function wrap(value: number, min: number, max: number) {
+      let range = max - min;
+      if (range === 0) return min;
+      return ((value - min) % range) + min;
+    }
+
+    function generateColor() {
+      let c = HSVtoRGB(Math.random(), 1.0, 1.0);
+      c.r *= 0.15;
+      c.g *= 0.15;
+      c.b *= 0.15;
+      return c;
+    }
+
+    function HSVtoRGB(h: number, s: number, v: number) {
+      let r: number, g: number, b: number;
+      let i: number, f: number, p: number, q: number, t: number;
+      i = Math.floor(h * 6);
+      f = h * 6 - i;
+      p = v * (1 - s);
+      q = v * (1 - f * s);
+      t = v * (1 - (1 - f) * s);
+
+      switch (i % 6) {
+        case 0:
+          (r = v), (g = t), (b = p);
+          break;
+        case 1:
+          (r = q), (g = v), (b = p);
+          break;
+        case 2:
+          (r = p), (g = v), (b = t);
+          break;
+        case 3:
+          (r = p), (g = q), (b = v);
+          break;
+        case 4:
+          (r = t), (g = p), (b = v);
+          break;
+        case 5:
+          (r = v), (g = p), (b = q);
+          break;
+        default:
+          (r = 0), (g = 0), (b = 0);
+      }
+
+      return {
+        r,
+        g,
+        b,
+      };
+    }
+
+    function correctRadius(radius: number) {
+      let aspectRatio = canvas.width / canvas.height;
+      if (aspectRatio > 1) {
+        radius *= aspectRatio;
+      }
+      return radius;
+    }
+
     function initFramebuffers() {
       let simRes = getResolution(config.SIM_RESOLUTION);
       let dyeRes = getResolution(config.DYE_RESOLUTION);
@@ -883,3 +963,141 @@ function SplashCursor({
       gl.uniform1f(
         splatProgram.uniforms.radius,
         correctRadius(config.SPLAT_RADIUS / 100.0)
+      );
+      blit(velocity.write);
+      velocity.swap();
+
+      gl.uniform1i(splatProgram.uniforms.uTarget, dye.read.attach(0));
+      gl.uniform3f(splatProgram.uniforms.color, color.r, color.g, color.b);
+      blit(dye.write);
+      dye.swap();
+    }
+
+    function multipleSplats(amount: number) {
+      for (let i = 0; i < amount; i++) {
+        const color = generateColor();
+        color.r *= 10.0;
+        color.g *= 10.0;
+        color.b *= 10.0;
+        const x = Math.random();
+        const y = Math.random();
+        const dx = 1000 * (Math.random() - 0.5);
+        const dy = 1000 * (Math.random() - 0.5);
+        splat(x, y, dx, dy, color);
+      }
+    }
+
+    function updatePointerDownData(pointer: any, id: number, posX: number, posY: number) {
+      pointer.id = id;
+      pointer.down = true;
+      pointer.moved = false;
+      pointer.texcoordX = posX / canvas.width;
+      pointer.texcoordY = 1.0 - posY / canvas.height;
+      pointer.prevTexcoordX = pointer.texcoordX;
+      pointer.prevTexcoordY = pointer.texcoordY;
+      pointer.deltaX = 0;
+      pointer.deltaY = 0;
+      pointer.color = generateColor();
+    }
+
+    function updatePointerMoveData(pointer: any, posX: number, posY: number) {
+      pointer.prevTexcoordX = pointer.texcoordX;
+      pointer.prevTexcoordY = pointer.texcoordY;
+      pointer.texcoordX = posX / canvas.width;
+      pointer.texcoordY = 1.0 - posY / canvas.height;
+      pointer.deltaX = correctDeltaX(pointer.texcoordX - pointer.prevTexcoordX);
+      pointer.deltaY = correctDeltaY(pointer.texcoordY - pointer.prevTexcoordY);
+      pointer.moved = Math.abs(pointer.deltaX) > 0 || Math.abs(pointer.deltaY) > 0;
+    }
+
+    function correctDeltaX(delta: number) {
+      let aspectRatio = canvas.width / canvas.height;
+      if (aspectRatio < 1) delta *= aspectRatio;
+      return delta;
+    }
+
+    function correctDeltaY(delta: number) {
+      let aspectRatio = canvas.width / canvas.height;
+      if (aspectRatio > 1) delta /= aspectRatio;
+      return delta;
+    }
+
+    canvas.addEventListener("mousemove", (e) => {
+      if (pointers[0].down) {
+        let posX = scaleByPixelRatio(e.offsetX);
+        let posY = scaleByPixelRatio(e.offsetY);
+        updatePointerMoveData(pointers[0], posX, posY);
+      }
+    });
+
+    canvas.addEventListener("mousedown", (e) => {
+      let posX = scaleByPixelRatio(e.offsetX);
+      let posY = scaleByPixelRatio(e.offsetY);
+      updatePointerDownData(pointers[0], -1, posX, posY);
+      
+      if (e.button === 0) { // Left click
+        splatPointer(pointers[0]);
+      } else if (e.button === 2) { // Right click
+        clickSplat(pointers[0]);
+      }
+    });
+
+    window.addEventListener("mouseup", () => {
+      pointers[0].down = false;
+    });
+
+    canvas.addEventListener("touchmove", (e) => {
+      e.preventDefault();
+      const touches = e.targetTouches;
+      for (let i = 0; i < touches.length; i++) {
+        let pointer = pointers[i];
+        if (pointer.down) {
+          let posX = scaleByPixelRatio(touches[i].pageX - canvas.getBoundingClientRect().left);
+          let posY = scaleByPixelRatio(touches[i].pageY - canvas.getBoundingClientRect().top);
+          updatePointerMoveData(pointer, posX, posY);
+        }
+      }
+    }, false);
+
+    canvas.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      const touches = e.targetTouches;
+      for (let i = 0; i < touches.length; i++) {
+        if (i >= pointers.length) pointers.push(new (pointerPrototype as any)());
+        let posX = scaleByPixelRatio(touches[i].pageX - canvas.getBoundingClientRect().left);
+        let posY = scaleByPixelRatio(touches[i].pageY - canvas.getBoundingClientRect().top);
+        updatePointerDownData(pointers[i], touches[i].identifier, posX, posY);
+      }
+    });
+
+    window.addEventListener("touchend", (e) => {
+      const touches = e.changedTouches;
+      for (let i = 0; i < touches.length; i++) {
+        for (let j = 0; j < pointers.length; j++) {
+          if (touches[i].identifier === pointers[j].id) pointers[j].down = false;
+        }
+      }
+    });
+
+    updateFrame();
+
+    multipleSplats(Math.random() * 20 + 5);
+
+    return () => {
+      // Cleanup when component unmounts
+      // Nothing specific to clean up with WebGL in this basic implementation
+    };
+  }, []);
+
+  return (
+    <canvas 
+      ref={canvasRef}
+      className="w-full h-full block"
+      style={{ 
+        background: TRANSPARENT ? 'transparent' : `rgb(${BACK_COLOR.r * 255}, ${BACK_COLOR.g * 255}, ${BACK_COLOR.b * 255})`,
+      }}
+    />
+  );
+}
+
+export default SplashCursor;
