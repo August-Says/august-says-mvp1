@@ -13,33 +13,29 @@ const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarPro
   const [startTime, setStartTime] = useState<number | null>(null);
 
   useEffect(() => {
+    let progressInterval: NodeJS.Timeout;
+    let timeInterval: NodeJS.Timeout;
+    
     if (isLoading && !animationStarted) {
       setAnimationStarted(true);
       setProgress(0);
       setElapsedTime(0);
       setStartTime(Date.now());
       
-      const interval = setInterval(() => {
+      progressInterval = setInterval(() => {
         setProgress(prev => {
           if (prev < 100) {
             return prev + 1;
           } else {
-            clearInterval(interval);
+            clearInterval(progressInterval);
             return 100;
           }
         });
       }, duration / 100);
       
-      const timeInterval = setInterval(() => {
-        if (startTime) {
-          setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
-        }
+      timeInterval = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - (startTime || Date.now())) / 1000));
       }, 1000);
-      
-      return () => {
-        clearInterval(interval);
-        clearInterval(timeInterval);
-      };
     }
     
     if (!isLoading) {
@@ -48,6 +44,11 @@ const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarPro
       setElapsedTime(0);
       setStartTime(null);
     }
+    
+    return () => {
+      clearInterval(progressInterval);
+      clearInterval(timeInterval);
+    };
   }, [isLoading, animationStarted, duration, startTime]);
 
   if (!isLoading && !animationStarted) return null;
@@ -56,12 +57,12 @@ const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarPro
     <div className="flex flex-col items-center justify-center py-8">
       <div className="relative w-full max-w-[600px] mb-8">
         <div className="loader-container relative h-6 w-full rounded-md overflow-hidden">
-          {/* Colorful background gradient */}
+          {/* Colorful background gradient that's always visible */}
           <div 
             className="absolute inset-0 bg-gradient-to-r from-blue-400 to-red-500 shadow-inner"
           ></div>
           
-          {/* Animated dark overlay that moves from right to left as progress increases */}
+          {/* Black overlay that covers the progress and moves from right to left */}
           <div 
             className="absolute inset-0 bg-gradient-to-b from-black to-gray-800"
             style={{ 
@@ -73,21 +74,22 @@ const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarPro
             }}
           ></div>
           
-          {/* Progress dot at the end of the bar */}
+          {/* Progress dot at the end of the visible colored section */}
           <div 
-            className={`absolute top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full bg-gradient-to-b from-black to-gray-800 ${progress === 100 ? 'bg-red-500' : ''}`}
+            className="absolute top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full bg-black"
             style={{ 
-              right: `${progress === 100 ? '0' : 'calc(' + (100 - progress) + '% - 0.5rem)'}`,
-              transition: 'right 0.3s ease-out'
+              left: `${progress}%`,
+              transform: 'translate(-50%, -50%)',
+              transition: 'left 0.3s ease-out'
             }}
           ></div>
           
           {/* Progress percentage */}
           <div 
-            className={`meter absolute top-0 right-8 text-2xl font-bold ${progress < 50 ? 'text-blue-400' : 'text-red-500'}`}
+            className="absolute top-0 right-8 text-2xl font-bold text-white"
             style={{ 
               transition: 'color 0.5s ease',
-              textShadow: '0 -1px 0 rgba(0,0,0,0.5)'
+              textShadow: '0 2px 4px rgba(0,0,0,0.5)'
             }}
           >
             {progress}%
