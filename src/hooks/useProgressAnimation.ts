@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 export const useProgressAnimation = (isLoading: boolean) => {
-  // We're keeping this hook for compatibility with existing code
-  // We're not actually using its return value anymore
+  // We're not using this hook for our progress bar anymore
+  // but keeping it for compatibility with existing code
   return 0;
 };

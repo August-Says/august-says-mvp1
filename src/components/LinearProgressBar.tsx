@@ -10,46 +10,51 @@ const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarPro
   const [progress, setProgress] = useState(0);
   const [animationStarted, setAnimationStarted] = useState(false);
   const [elapsedTime, setElapsedTime] = useState(0);
-  const [startTime, setStartTime] = useState<number | null>(null);
 
   useEffect(() => {
-    let progressInterval: NodeJS.Timeout;
-    let timeInterval: NodeJS.Timeout;
+    let progressInterval: NodeJS.Timeout | null = null;
+    let timeInterval: NodeJS.Timeout | null = null;
     
     if (isLoading && !animationStarted) {
+      // Reset values when loading starts
       setAnimationStarted(true);
       setProgress(0);
       setElapsedTime(0);
-      setStartTime(Date.now());
       
+      const startTime = Date.now();
+      
+      // Set up progress interval
       progressInterval = setInterval(() => {
         setProgress(prev => {
           if (prev < 100) {
             return prev + 1;
           } else {
-            clearInterval(progressInterval);
+            if (progressInterval) clearInterval(progressInterval);
             return 100;
           }
         });
       }, duration / 100);
       
+      // Set up time interval
       timeInterval = setInterval(() => {
-        setElapsedTime(Math.floor((Date.now() - (startTime || Date.now())) / 1000));
+        const currentTime = Date.now();
+        const elapsed = Math.floor((currentTime - startTime) / 1000);
+        setElapsedTime(elapsed);
       }, 1000);
     }
     
-    if (!isLoading) {
+    if (!isLoading && animationStarted) {
       setAnimationStarted(false);
       setProgress(0);
       setElapsedTime(0);
-      setStartTime(null);
     }
     
+    // Clean up intervals
     return () => {
-      clearInterval(progressInterval);
-      clearInterval(timeInterval);
+      if (progressInterval) clearInterval(progressInterval);
+      if (timeInterval) clearInterval(timeInterval);
     };
-  }, [isLoading, animationStarted, duration, startTime]);
+  }, [isLoading, animationStarted, duration]);
 
   if (!isLoading && !animationStarted) return null;
 
@@ -57,30 +62,29 @@ const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarPro
     <div className="flex flex-col items-center justify-center py-8">
       <div className="relative w-full max-w-[600px] mb-8">
         <div className="loader-container relative h-6 w-full rounded-md overflow-hidden">
-          {/* Colorful background gradient that's always visible */}
+          {/* Gradient background - always visible */}
           <div 
             className="absolute inset-0 bg-gradient-to-r from-blue-400 to-red-500 shadow-inner"
           ></div>
           
-          {/* Black overlay that covers the progress and moves from right to left */}
+          {/* Black overlay that slides right to left as progress increases */}
           <div 
-            className="absolute inset-0 bg-gradient-to-b from-black to-gray-800"
+            className="absolute inset-0 bg-black/80"
             style={{ 
               width: `${100 - progress}%`, 
               right: 0, 
+              left: 'auto',
               borderTopLeftRadius: progress === 100 ? 0 : '0.375rem',
               borderBottomLeftRadius: progress === 100 ? 0 : '0.375rem',
-              transition: 'width 0.3s ease-out'
             }}
           ></div>
           
-          {/* Progress dot at the end of the visible colored section */}
+          {/* Progress dot */}
           <div 
-            className="absolute top-1/2 transform -translate-y-1/2 w-4 h-4 rounded-full bg-black"
+            className="absolute top-1/2 w-4 h-4 rounded-full bg-white shadow-md"
             style={{ 
               left: `${progress}%`,
               transform: 'translate(-50%, -50%)',
-              transition: 'left 0.3s ease-out'
             }}
           ></div>
           
@@ -88,7 +92,6 @@ const LinearProgressBar = ({ isLoading, duration = 10000 }: LinearProgressBarPro
           <div 
             className="absolute top-0 right-8 text-2xl font-bold text-white"
             style={{ 
-              transition: 'color 0.5s ease',
               textShadow: '0 2px 4px rgba(0,0,0,0.5)'
             }}
           >
