@@ -22,13 +22,45 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
     
     toast.info('Preparing your PDF...');
     
-    const element = contentRef.current;
+    // Clone the content element to avoid styling issues
+    const element = contentRef.current.cloneNode(true) as HTMLElement;
+    
+    // Apply PDF-specific styling to the cloned element
+    element.style.width = '100%';
+    element.style.padding = '20px';
+    element.style.background = 'white';
+    element.style.color = 'black';
+    
+    // Make sure all text is visible in the PDF
+    const textElements = element.querySelectorAll('p, h1, h2, h3, h4, h5, h6, span, li');
+    textElements.forEach(el => {
+      (el as HTMLElement).style.color = 'black';
+      (el as HTMLElement).style.opacity = '1';
+    });
+    
+    // Apply styling to headings
+    const headings = element.querySelectorAll('h1, h2, h3, h4, h5, h6');
+    headings.forEach(heading => {
+      (heading as HTMLElement).style.color = '#333';
+      (heading as HTMLElement).style.marginBottom = '10px';
+    });
+    
     const opt = {
       margin: [10, 10, 10, 10],
       filename: 'marketing-canvas.pdf',
       image: { type: 'jpeg', quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true, logging: false },
-      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+      html2canvas: { 
+        scale: 2, 
+        useCORS: true, 
+        logging: false,
+        backgroundColor: '#ffffff'
+      },
+      jsPDF: { 
+        unit: 'mm', 
+        format: 'a4', 
+        orientation: 'portrait',
+        compress: true
+      }
     };
     
     // Small delay to allow toast to show
@@ -147,7 +179,7 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         </div>
       </div>
       
-      <div ref={contentRef} className="space-y-8 text-white/90">
+      <div ref={contentRef} className="space-y-8 text-white/90 pdf-content">
         {processedSections.length > 0 ? (
           processedSections.map((section, index) => {
             const title = formatSectionTitle(section.title);
