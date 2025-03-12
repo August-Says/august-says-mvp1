@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -8,10 +7,12 @@ import ResultDisplay from '@/components/ResultDisplay';
 import PdfUploadForm from '@/components/pdf/PdfUploadForm';
 import { useWebhookSubmission } from '@/hooks/useWebhookSubmission';
 import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 const PdfUpload = () => {
   const navigate = useNavigate();
   const [textContent, setTextContent] = useState('');
+  const [loadingProgress, setLoadingProgress] = useState(0);
   
   const generateFallbackCanvas = (content: string) => {
     return `# Generated Marketing Canvas
@@ -77,6 +78,44 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     fallbackGenerator: generateFallbackCanvas
   });
 
+  useEffect(() => {
+    if (isLoading) {
+      setLoadingProgress(0);
+      
+      const processingDelay = setTimeout(() => {
+        setLoadingProgress(8);
+        
+        const interval = setInterval(() => {
+          setLoadingProgress(prev => {
+            if (prev < 15) {
+              return prev + (Math.random() * 1.0 + 0.5);
+            } else if (prev < 35) {
+              return prev + (Math.random() * 2.0 + 1.0);
+            } else if (prev < 60) {
+              return prev + (Math.random() * 1.5 + 0.7);
+            } else if (prev < 80) {
+              return prev + (Math.random() * 0.8 + 0.3);
+            } else {
+              return prev + (Math.random() * 0.3 + 0.1);
+            }
+          });
+        }, 300);
+        
+        return () => {
+          clearInterval(interval);
+          if (isLoading) {
+            setLoadingProgress(100);
+          }
+        };
+      }, 800);
+      
+      return () => {
+        clearTimeout(processingDelay);
+        setLoadingProgress(100);
+      };
+    }
+  }, [isLoading]);
+
   const handleFormSubmit = async (content: string, type: 'upload' | 'text') => {
     const params: Record<string, string> = {};
     setTextContent(content);
@@ -107,7 +146,10 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
-        <LoadingAnimation message="Analyzing your document and generating canvas..." />
+        <LoadingAnimation 
+          message="Analyzing your document and generating canvas..." 
+          progress={loadingProgress}
+        />
       </div>
     );
   }

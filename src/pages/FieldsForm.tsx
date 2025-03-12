@@ -21,28 +21,49 @@ const FieldsForm = () => {
     setResult 
   } = useFormSubmission();
   
-  // Simulated loading progress
+  // Enhanced loading progress with smoother transitions
   const [loadingProgress, setLoadingProgress] = useState(0);
   
-  // When loading starts, animate the progress
+  // When loading starts, animate the progress with improved algorithm
   useEffect(() => {
     if (isLoading) {
       setLoadingProgress(0);
-      const interval = setInterval(() => {
-        setLoadingProgress(prev => {
-          // Slow down as it approaches 90%
-          const increment = prev < 30 ? 5 : prev < 60 ? 3 : prev < 80 ? 1 : 0.5;
-          const newProgress = Math.min(prev + increment, 90);
-          return newProgress;
-        });
-      }, 300);
+      
+      // Initial acceleration phase
+      const accelerationPhase = setTimeout(() => {
+        setLoadingProgress(5);
+        
+        // Create different speed phases for more realistic loading feel
+        const interval = setInterval(() => {
+          setLoadingProgress(prev => {
+            // Different speeds for different phases to create a more natural loading experience
+            if (prev < 20) {
+              return prev + (Math.random() * 2 + 1); // Fast initial progress
+            } else if (prev < 40) {
+              return prev + (Math.random() * 1.5 + 0.8); // Slightly slower
+            } else if (prev < 60) {
+              return prev + (Math.random() * 1.2 + 0.5); // Medium speed
+            } else if (prev < 80) {
+              return prev + (Math.random() * 0.8 + 0.3); // Slower
+            } else {
+              return prev + (Math.random() * 0.4 + 0.1); // Very slow approaching 90%
+            }
+          });
+        }, 250);
+        
+        return () => {
+          clearInterval(interval);
+          // When loading completes, jump to 100%
+          if (isLoading) {
+            setLoadingProgress(100);
+          }
+        };
+      }, 500);
       
       return () => {
-        clearInterval(interval);
+        clearTimeout(accelerationPhase);
         // When loading completes, jump to 100%
-        if (isLoading) {
-          setLoadingProgress(100);
-        }
+        setLoadingProgress(100);
       };
     }
   }, [isLoading]);
