@@ -2,6 +2,23 @@
 "use client";
 import { useEffect, useRef } from "react";
 
+// Custom interfaces for our WebGL classes
+interface CustomMaterial {
+  vertexShader: any;
+  fragmentShaderSource: string;
+  programs: any[];
+  activeProgram: any;
+  uniforms: any[];
+  setKeywords: (keywords: string[]) => void;
+  bind: () => void;
+}
+
+interface CustomProgram {
+  uniforms: Record<string, any>;
+  program: any;
+  bind: () => void;
+}
+
 function SplashCursor({
   // Add whatever props you like for customization
   SIM_RESOLUTION = 128,
@@ -19,7 +36,7 @@ function SplashCursor({
   BACK_COLOR = { r: 0.5, g: 0, b: 0 },
   TRANSPARENT = true,
 }) {
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -173,6 +190,12 @@ function SplashCursor({
     }
 
     class Material {
+      vertexShader: any;
+      fragmentShaderSource: string;
+      programs: any[];
+      activeProgram: any;
+      uniforms: any[];
+
       constructor(vertexShader, fragmentShaderSource) {
         this.vertexShader = vertexShader;
         this.fragmentShaderSource = fragmentShaderSource;
@@ -203,6 +226,9 @@ function SplashCursor({
     }
 
     class Program {
+      uniforms: Record<string, any>;
+      program: any;
+
       constructor(vertexShader, fragmentShader) {
         this.uniforms = {};
         this.program = createProgram(vertexShader, fragmentShader);
@@ -234,7 +260,7 @@ function SplashCursor({
     }
 
     function compileShader(type, source, keywords) {
-      source = addKeywords(source, keywords);
+      source = addKeywords(source, keywords || []);
       const shader = gl.createShader(type);
       gl.shaderSource(shader, source);
       gl.compileShader(shader);
@@ -286,7 +312,8 @@ function SplashCursor({
         void main () {
             gl_FragColor = texture2D(uTexture, vUv);
         }
-      `
+      `,
+      []
     );
 
     const clearShader = compileShader(
@@ -301,7 +328,8 @@ function SplashCursor({
         void main () {
             gl_FragColor = value * texture2D(uTexture, vUv);
         }
-     `
+     `,
+     []
     );
 
     const displayShaderSource = `
@@ -364,7 +392,8 @@ function SplashCursor({
             vec3 base = texture2D(uTarget, vUv).xyz;
             gl_FragColor = vec4(base + splat, 1.0);
         }
-      `
+      `,
+      []
     );
 
     const advectionShader = compileShader(
@@ -405,7 +434,7 @@ function SplashCursor({
             gl_FragColor = result / decay;
         }
       `,
-      ext.supportLinearFiltering ? null : ["MANUAL_FILTERING"]
+      ext.supportLinearFiltering ? [] : ["MANUAL_FILTERING"]
     );
 
     const divergenceShader = compileShader(
@@ -435,7 +464,8 @@ function SplashCursor({
             float div = 0.5 * (R - L + T - B);
             gl_FragColor = vec4(div, 0.0, 0.0, 1.0);
         }
-      `
+      `,
+      []
     );
 
     const curlShader = compileShader(
@@ -458,7 +488,8 @@ function SplashCursor({
             float vorticity = R - L - T + B;
             gl_FragColor = vec4(0.5 * vorticity, 0.0, 0.0, 1.0);
         }
-      `
+      `,
+      []
     );
 
     const vorticityShader = compileShader(
@@ -493,7 +524,8 @@ function SplashCursor({
             velocity = min(max(velocity, -1000.0), 1000.0);
             gl_FragColor = vec4(velocity, 0.0, 1.0);
         }
-      `
+      `,
+      []
     );
 
     const pressureShader = compileShader(
@@ -519,7 +551,8 @@ function SplashCursor({
             float pressure = (L + R + B + T - divergence) * 0.25;
             gl_FragColor = vec4(pressure, 0.0, 0.0, 1.0);
         }
-      `
+      `,
+      []
     );
 
     const gradientSubtractShader = compileShader(
@@ -544,7 +577,8 @@ function SplashCursor({
             velocity.xy -= vec2(R - L, T - B);
             gl_FragColor = vec4(velocity, 0.0, 1.0);
         }
-      `
+      `,
+      []
     );
 
     const blit = (() => {
@@ -1258,3 +1292,4 @@ function SplashCursor({
 }
 
 export default SplashCursor;
+
