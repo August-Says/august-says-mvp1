@@ -1,18 +1,15 @@
+
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import LoadingAnimation from '@/components/LoadingAnimation';
-import ResultDisplay from '@/components/ResultDisplay';
-import PdfUploadForm from '@/components/pdf/PdfUploadForm';
 import { useWebhookSubmission } from '@/hooks/useWebhookSubmission';
-import { toast } from 'sonner';
-import { useEffect } from 'react';
+import { useProgressAnimation } from '@/hooks/useProgressAnimation';
+import LoadingContent from '@/components/pdf/LoadingContent';
+import ResultContent from '@/components/pdf/ResultContent';
+import UploadFormContent from '@/components/pdf/UploadFormContent';
 
 const PdfUpload = () => {
   const navigate = useNavigate();
   const [textContent, setTextContent] = useState('');
-  const [loadingProgress, setLoadingProgress] = useState(0);
   
   const generateFallbackCanvas = (content: string) => {
     return `# Generated Marketing Canvas
@@ -72,49 +69,12 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     callWebhook,
     navigateHistory,
     canGoBack,
-    canGoForward,
-    currentHistoryEntry
+    canGoForward
   } = useWebhookSubmission({
     fallbackGenerator: generateFallbackCanvas
   });
 
-  useEffect(() => {
-    if (isLoading) {
-      setLoadingProgress(0);
-      
-      const processingDelay = setTimeout(() => {
-        setLoadingProgress(8);
-        
-        const interval = setInterval(() => {
-          setLoadingProgress(prev => {
-            if (prev < 15) {
-              return prev + (Math.random() * 1.0 + 0.5);
-            } else if (prev < 35) {
-              return prev + (Math.random() * 2.0 + 1.0);
-            } else if (prev < 60) {
-              return prev + (Math.random() * 1.5 + 0.7);
-            } else if (prev < 80) {
-              return prev + (Math.random() * 0.8 + 0.3);
-            } else {
-              return prev + (Math.random() * 0.3 + 0.1);
-            }
-          });
-        }, 300);
-        
-        return () => {
-          clearInterval(interval);
-          if (isLoading) {
-            setLoadingProgress(100);
-          }
-        };
-      }, 800);
-      
-      return () => {
-        clearTimeout(processingDelay);
-        setLoadingProgress(100);
-      };
-    }
-  }, [isLoading]);
+  const loadingProgress = useProgressAnimation(isLoading);
 
   const handleFormSubmit = async (content: string, type: 'upload' | 'text') => {
     const params: Record<string, string> = {};
@@ -144,78 +104,27 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
   };
 
   if (isLoading) {
-    return (
-      <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
-        <LoadingAnimation 
-          message="Analyzing your document and generating canvas..." 
-          progress={loadingProgress}
-        />
-      </div>
-    );
+    return <LoadingContent loadingProgress={loadingProgress} />;
   }
   
   if (result) {
     return (
-      <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
-        <div className="max-w-4xl mx-auto mb-4 flex justify-between items-center">
-          <Button 
-            onClick={handleBack} 
-            variant="ghost" 
-            className="text-white/80 hover:text-white hover:bg-white/10"
-          >
-            <ArrowLeft size={18} className="mr-2" />
-            Back to Form
-          </Button>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => handleHistoryNavigation('back')}
-              variant="outline"
-              disabled={!canGoBack}
-              className="text-white border-white/20 hover:bg-white/10 disabled:opacity-50"
-            >
-              <ChevronLeft size={18} className="mr-1" />
-              Previous
-            </Button>
-            <Button
-              onClick={() => handleHistoryNavigation('forward')}
-              variant="outline"
-              disabled={!canGoForward}
-              className="text-white border-white/20 hover:bg-white/10 disabled:opacity-50"
-            >
-              Next
-              <ChevronRight size={18} className="ml-1" />
-            </Button>
-          </div>
-        </div>
-        <ResultDisplay result={result} onBack={handleBack} />
-      </div>
+      <ResultContent
+        result={result}
+        onBack={handleBack}
+        onNavigate={handleHistoryNavigation}
+        canGoBack={canGoBack}
+        canGoForward={canGoForward}
+      />
     );
   }
 
   return (
-    <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
-      <div className="mb-8">
-        <Button 
-          onClick={handleBack} 
-          variant="ghost" 
-          className="text-white/80 hover:text-white hover:bg-white/10"
-        >
-          <ArrowLeft size={18} className="mr-2" />
-          Back to Home
-        </Button>
-      </div>
-      
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-white mb-4">Create Canvas Using Document</h1>
-          <p className="text-white/80">
-            Upload a PDF or paste text to generate a customized marketing canvas.
-          </p>
-        </div>
-        
-        <PdfUploadForm onSubmit={handleFormSubmit} initialTextContent={textContent} />
-      </div>
-    </div>
+    <UploadFormContent
+      onBack={handleBack}
+      onSubmit={handleFormSubmit}
+      textContent={textContent}
+    />
   );
 };
 
