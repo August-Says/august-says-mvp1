@@ -18,28 +18,8 @@ export const useWebhookSubmission = (options?: WebhookOptions) => {
   const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistory[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
 
-  const defaultWebhookUrl = 'https://sonarai.app.n8n.cloud/webhook-test/715d27f7-f730-437c-8abe-cda82e04210e';
-  const webhookUrl = options?.webhookUrl || defaultWebhookUrl;
+  const webhookUrl = options?.webhookUrl || 'https://sonarai.app.n8n.cloud/webhook/715d27f7-f730-437c-8abe-cda82e04210e';
   
-  const defaultFallbackGenerator = (content: string) => {
-    return `# Generated Marketing Canvas
-
-## Executive Summary
-A comprehensive marketing strategy based on the provided content.
-
-${content.substring(0, 200)}${content.length > 200 ? '...' : ''}
-
-## Target Audience Analysis
-Detailed breakdown of primary and secondary audience segments.
-
-## Key Messages
-- Primary message: Focus on value proposition and unique selling points
-- Secondary messages: Address specific audience needs and objections
-- Tone and voice recommendations for consistent communication`;
-  };
-
-  const fallbackGenerator = options?.fallbackGenerator || defaultFallbackGenerator;
-
   const navigateHistory = (direction: 'back' | 'forward') => {
     const newIndex = direction === 'back' ? currentHistoryIndex - 1 : currentHistoryIndex + 1;
     if (newIndex >= 0 && newIndex < submissionHistory.length) {
@@ -77,10 +57,15 @@ Detailed breakdown of primary and secondary audience segments.
       console.log('Making request to:', fullUrl);
       
       const response = await fetch(fullUrl, {
-        method: 'GET',
+        method: 'POST',
         headers: {
-          'Accept': 'application/json'
-        }
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          params: Object.fromEntries(queryParams),
+          content: contentValue || ''
+        })
       });
       
       console.log('Response status:', response.status);
@@ -124,17 +109,13 @@ Detailed breakdown of primary and secondary audience segments.
         toast.success('Canvas generated successfully!');
         return data;
       } else {
-        const fallbackContent = fallbackGenerator(contentValue || '');
-        setResult(fallbackContent);
-        toast.info('Used fallback canvas data');
-        return fallbackContent;
+        toast.error('No content generated, please try again.');
+        return null;
       }
     } catch (error) {
       console.error('Webhook error:', error);
-      toast.error('Failed to generate canvas. Using fallback data.');
-      const fallbackContent = fallbackGenerator(contentValue || '');
-      setResult(fallbackContent);
-      return fallbackContent;
+      toast.error('No content generated, please try again.');
+      return null;
     } finally {
       setIsLoading(false);
     }
