@@ -1,4 +1,5 @@
-import { WebGLContext, ShaderUniforms } from './types';
+
+import { WebGLContext, ShaderUniforms, FrameBuffer } from './types';
 
 export const initWebGL = (canvas: HTMLCanvasElement): WebGLContext | null => {
   const params = {
@@ -28,6 +29,7 @@ export const initWebGL = (canvas: HTMLCanvasElement): WebGLContext | null => {
     gl.RGBA16F = 0x881A;
     gl.RG = 0x8227;
     gl.RED = 0x1903;
+    gl.HALF_FLOAT = 0x140B;
   }
 
   return gl;
@@ -172,3 +174,59 @@ export class Material {
     this.program.setUniforms(this.uniforms);
   }
 }
+
+export const createFBO = (
+  gl: WebGLContext,
+  width: number,
+  height: number,
+  texType: number,
+  format: ExtensionFormats
+): FrameBuffer => {
+  gl.activeTexture(gl.TEXTURE0);
+  const texture = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, texture);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  gl.texImage2D(gl.TEXTURE_2D, 0, format.internalFormat, width, height, 0, format.format, texType, null);
+
+  const fbo = gl.createFramebuffer();
+  gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+  gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, texture, 0);
+  gl.bindTexture(gl.TEXTURE_2D, null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  
+  return { texture, fbo };
+};
+
+export const createDoubleFBO = (
+  gl: WebGLContext,
+  width: number,
+  height: number,
+  texType: number,
+  format: ExtensionFormats
+) => {
+  let fbo1 = createFBO(gl, width, height, texType, format);
+  let fbo2 = createFBO(gl, width, height, texType, format);
+  
+  return {
+    get read() {
+      return fbo1;
+    },
+    set read(value) {
+      fbo1 = value;
+    },
+    get write() {
+      return fbo2;
+    },
+    set write(value) {
+      fbo2 = value;
+    },
+    swap: () => {
+      const temp = fbo1;
+      fbo1 = fbo2;
+      fbo2 = temp;
+    },
+  };
+};

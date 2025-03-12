@@ -52,6 +52,12 @@ export interface FrameBuffer {
   fbo: WebGLFramebuffer | null;
 }
 
+export interface DoubleFBO {
+  read: FrameBuffer;
+  write: FrameBuffer;
+  swap: () => void;
+}
+
 export interface SplashCursorConfig {
   SIM_RESOLUTION: number;
   DYE_RESOLUTION: number;
@@ -68,4 +74,3 @@ export interface SplashCursorConfig {
   BACK_COLOR: Color;
   TRANSPARENT: boolean;
 }
-
