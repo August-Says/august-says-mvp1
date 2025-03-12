@@ -2,11 +2,11 @@
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import LoadingAnimation from '@/components/LoadingAnimation';
 import ResultDisplay from '@/components/ResultDisplay';
 import MarketingForm from '@/components/MarketingForm';
 import { useFormSubmission } from '@/hooks/useFormSubmission';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import LinearProgressBar from '@/components/LinearProgressBar';
 
 const FieldsForm = () => {
   const navigate = useNavigate();
@@ -20,53 +20,6 @@ const FieldsForm = () => {
     resetForm,
     setResult 
   } = useFormSubmission();
-  
-  // Enhanced loading progress with smoother transitions
-  const [loadingProgress, setLoadingProgress] = useState(0);
-  
-  // When loading starts, animate the progress with improved algorithm
-  useEffect(() => {
-    if (isLoading) {
-      setLoadingProgress(0);
-      
-      // Initial acceleration phase
-      const accelerationPhase = setTimeout(() => {
-        setLoadingProgress(5);
-        
-        // Create different speed phases for more realistic loading feel
-        const interval = setInterval(() => {
-          setLoadingProgress(prev => {
-            // Different speeds for different phases to create a more natural loading experience
-            if (prev < 20) {
-              return prev + (Math.random() * 2 + 1); // Fast initial progress
-            } else if (prev < 40) {
-              return prev + (Math.random() * 1.5 + 0.8); // Slightly slower
-            } else if (prev < 60) {
-              return prev + (Math.random() * 1.2 + 0.5); // Medium speed
-            } else if (prev < 80) {
-              return prev + (Math.random() * 0.8 + 0.3); // Slower
-            } else {
-              return prev + (Math.random() * 0.4 + 0.1); // Very slow approaching 90%
-            }
-          });
-        }, 250);
-        
-        return () => {
-          clearInterval(interval);
-          // When loading completes, jump to 100%
-          if (isLoading) {
-            setLoadingProgress(100);
-          }
-        };
-      }, 500);
-      
-      return () => {
-        clearTimeout(accelerationPhase);
-        // When loading completes, jump to 100%
-        setLoadingProgress(100);
-      };
-    }
-  }, [isLoading]);
 
   const handleBack = () => {
     if (result) {
@@ -79,7 +32,7 @@ const FieldsForm = () => {
   if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
-        <LoadingAnimation progress={loadingProgress} />
+        <LinearProgressBar isLoading={true} />
       </div>
     );
   }

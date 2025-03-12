@@ -1,5 +1,5 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Give+You+Glory|Exo:800&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -64,6 +64,18 @@
 
   .text-balance {
     text-wrap: balance;
+  }
+  
+  /* Animation for the progress bar runner */
+  @keyframes loader {
+    0% { width: 100% }
+    100% { width: 0%; }
+  }
+
+  /* Animation for the progress meter color */
+  @keyframes meter {
+    0% { color: rgb(91, 216, 255);}
+    100% { color: #ff0000; }
   }
   
   /* Battle.net style progress bar */

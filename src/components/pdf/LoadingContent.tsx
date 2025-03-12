@@ -1,5 +1,5 @@
 
-import LoadingAnimation from '@/components/LoadingAnimation';
+import LinearProgressBar from '@/components/LinearProgressBar';
 
 interface LoadingContentProps {
   loadingProgress: number;
@@ -8,10 +8,7 @@ interface LoadingContentProps {
 const LoadingContent = ({ loadingProgress }: LoadingContentProps) => {
   return (
     <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
-      <LoadingAnimation 
-        message="Analyzing your document and generating canvas..." 
-        progress={loadingProgress}
-      />
+      <LinearProgressBar isLoading={true} />
     </div>
   );
 };
