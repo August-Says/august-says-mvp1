@@ -1,3 +1,4 @@
+
 import { useEffect, useRef } from 'react';
 import { 
   Program, 
@@ -145,6 +146,7 @@ function SplashCursor(props: Partial<SplashCursorConfig>) {
     const mouseState = createMouseState();
 
     // Create event handler functions bound to this context
+    const handleMouseDownBound = (e: MouseEvent) => handleMouseDown(e, mouseState);
     const handleMouseMoveBound = (e: MouseEvent) => handleMouseMove(
       e, 
       mouseState, 
@@ -159,6 +161,7 @@ function SplashCursor(props: Partial<SplashCursorConfig>) {
       simWidth,
       simHeight
     );
+    const handleMouseUpBound = () => handleMouseUp(mouseState);
 
     // Main rendering loop
     let lastTime = Date.now();
@@ -194,8 +197,8 @@ function SplashCursor(props: Partial<SplashCursorConfig>) {
     // Set up event listeners
     canvas.addEventListener('mousedown', handleMouseDownBound);
     canvas.addEventListener('mousemove', handleMouseMoveBound);
-    canvas.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('mouseleave', handleMouseUp);
+    canvas.addEventListener('mouseup', handleMouseUpBound);
+    canvas.addEventListener('mouseleave', handleMouseUpBound);
     
     update();
     
@@ -203,8 +206,8 @@ function SplashCursor(props: Partial<SplashCursorConfig>) {
     return () => {
       canvas.removeEventListener('mousedown', handleMouseDownBound);
       canvas.removeEventListener('mousemove', handleMouseMoveBound);
-      canvas.removeEventListener('mouseup', handleMouseUp);
-      canvas.removeEventListener('mouseleave', handleMouseUp);
+      canvas.removeEventListener('mouseup', handleMouseUpBound);
+      canvas.removeEventListener('mouseleave', handleMouseUpBound);
     };
   }, [
     props.SIM_RESOLUTION,
