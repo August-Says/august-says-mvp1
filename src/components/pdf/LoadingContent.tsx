@@ -7,8 +7,10 @@ interface LoadingContentProps {
 
 const LoadingContent = ({ loadingProgress }: LoadingContentProps) => {
   return (
-    <div className="container mx-auto py-8 px-4 sm:px-6 lg:px-8 animate-fade-in">
-      <LinearProgressBar isLoading={true} />
+    <div className="container mx-auto py-16 px-4 sm:px-6 lg:px-8 animate-fade-in">
+      <div className="w-full max-w-md mx-auto glass-morphism rounded-xl p-8">
+        <LinearProgressBar isLoading={true} />
+      </div>
     </div>
   );
 };
