@@ -19,7 +19,7 @@ export const useWebhookSubmission = (options?: WebhookOptions) => {
   const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistory[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
 
-  // Update to production webhook URL
+  // Fixed webhook URL - using HTTPS
   const defaultWebhookUrl = 'https://sonarai.app.n8n.cloud/webhook/715d27f7-f730-437c-8abe-cda82e04210e';
   const webhookUrl = options?.webhookUrl || defaultWebhookUrl;
   
@@ -60,6 +60,7 @@ Detailed breakdown of primary and secondary audience segments.
     setIsLoading(true);
     
     try {
+      // Create a URL with parameters for a POST request body
       const queryParams = new URLSearchParams();
       
       // Add all params to query
@@ -71,18 +72,31 @@ Detailed breakdown of primary and secondary audience segments.
       
       // If content key and value are provided, add them
       if (contentKey && contentValue) {
-        queryParams.append(contentKey, contentValue);
+        // Instead of adding to URL, prepare it for request body
         console.log(`Sending ${contentKey} to webhook:`, contentValue.substring(0, 100) + '...');
       }
       
-      const fullUrl = `${webhookUrl}?${queryParams.toString()}`;
+      // Prepare request URL and data
+      const fullUrl = webhookUrl;
       console.log('Making request to:', fullUrl);
       
+      // Create request body
+      const requestBody: Record<string, any> = {
+        ...params
+      };
+      
+      if (contentKey && contentValue) {
+        requestBody[contentKey] = contentValue;
+      }
+      
+      // Make POST request instead of GET
       const response = await fetch(fullUrl, {
-        method: 'GET',
+        method: 'POST',
         headers: {
+          'Content-Type': 'application/json',
           'Accept': 'application/json'
-        }
+        },
+        body: JSON.stringify(requestBody)
       });
       
       console.log('Response status:', response.status);
@@ -126,6 +140,7 @@ Detailed breakdown of primary and secondary audience segments.
         toast.success('Canvas generated successfully!');
         return data;
       } else {
+        console.log('Using fallback data because no valid response was received');
         const fallbackContent = fallbackGenerator(contentValue || '');
         setResult(fallbackContent);
         toast.info('Used fallback canvas data');
