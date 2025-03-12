@@ -17,24 +17,22 @@ import {
   pressureShaderSource,
   gradientSubtractShaderSource
 } from '../utils/webgl/shaders';
-import { WebGLContext, SplashCursorConfig, ExtensionFormats } from '../utils/webgl/types';
+import { WebGLContext, SplashCursorConfig } from '../utils/webgl/types';
+import { defaultSplashCursorConfig } from '../utils/webgl/splashCursorConfig';
+import { 
+  setupVertexArray,
+  stepSimulation
+} from '../utils/webgl/fluidSimulation';
+import {
+  createMouseState,
+  handleMouseDown,
+  handleMouseMove,
+  handleMouseUp
+} from '../utils/webgl/splashCursorEvents';
 
-function SplashCursor({
-  SIM_RESOLUTION = 128,
-  DYE_RESOLUTION = 1024,
-  CAPTURE_RESOLUTION = 512,
-  DENSITY_DISSIPATION = 0.98,
-  VELOCITY_DISSIPATION = 0.98,
-  PRESSURE = 0.8,
-  PRESSURE_ITERATIONS = 20,
-  CURL = 30,
-  SPLAT_RADIUS = 0.25,
-  SPLAT_FORCE = 6000,
-  SHADING = true,
-  COLOR_UPDATE_SPEED = 10,
-  BACK_COLOR = { r: 0, g: 0, b: 0 },
-  TRANSPARENT = false,
-}: Partial<SplashCursorConfig>) {
+function SplashCursor(props: Partial<SplashCursorConfig>) {
+  // Merge provided props with default config
+  const config: SplashCursorConfig = { ...defaultSplashCursorConfig, ...props };
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   useEffect(() => {
@@ -48,17 +46,17 @@ function SplashCursor({
     }
 
     // Initialize extensions and formats
-    const formatRGBA: ExtensionFormats = {
+    const formatRGBA = {
       internalFormat: gl.RGBA16F || gl.RGBA,
       format: gl.RGBA
     };
     
-    const formatRG: ExtensionFormats = {
+    const formatRG = {
       internalFormat: gl.RG16F || gl.RGBA,
       format: gl.RG || gl.RGBA
     };
     
-    const formatR: ExtensionFormats = {
+    const formatR = {
       internalFormat: gl.R16F || gl.RGBA,
       format: gl.RED || gl.RGBA
     };
@@ -66,7 +64,13 @@ function SplashCursor({
     const halfFloatTexType = gl.HALF_FLOAT || 0x8D61; // 0x8D61 is HALF_FLOAT_OES
     const supportLinearFiltering = gl.getExtension('OES_texture_float_linear') != null;
 
-    gl.clearColor(BACK_COLOR.r, BACK_COLOR.g, BACK_COLOR.b, TRANSPARENT ? 0 : 1);
+    // Set up canvas background
+    gl.clearColor(
+      config.BACK_COLOR.r, 
+      config.BACK_COLOR.g, 
+      config.BACK_COLOR.b, 
+      config.TRANSPARENT ? 0 : 1
+    );
     gl.clear(gl.COLOR_BUFFER_BIT);
 
     // Set up WebGL
@@ -75,27 +79,26 @@ function SplashCursor({
     gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, quadVertices, gl.STATIC_DRAW);
     
-    const vertexArray = gl.createVertexArray 
-      ? gl.createVertexArray() 
-      : gl.getExtension('OES_vertex_array_object')?.createVertexArrayOES();
-    
-    if (gl.createVertexArray) {
-      gl.bindVertexArray(vertexArray);
-    } else if (gl.getExtension('OES_vertex_array_object')) {
-      gl.getExtension('OES_vertex_array_object')?.bindVertexArrayOES(vertexArray);
-    }
+    // Setup vertex array
+    const vertexArray = setupVertexArray(gl);
     
     gl.enableVertexAttribArray(0);
     gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
-    let simWidth = SIM_RESOLUTION;
-    let simHeight = SIM_RESOLUTION;
-    let dyeWidth = DYE_RESOLUTION;
-    let dyeHeight = DYE_RESOLUTION;
+    // Set simulation dimensions
+    let simWidth = config.SIM_RESOLUTION;
+    let simHeight = config.SIM_RESOLUTION;
+    let dyeWidth = config.DYE_RESOLUTION;
+    let dyeHeight = config.DYE_RESOLUTION;
 
     // Compile shaders
     const vertexShader = compileShader(gl, gl.VERTEX_SHADER, baseVertexShader);
-    const displayShader = compileShader(gl, gl.FRAGMENT_SHADER, displayShaderSource, SHADING ? ['SHADING'] : []);
+    const displayShader = compileShader(
+      gl, 
+      gl.FRAGMENT_SHADER, 
+      displayShaderSource, 
+      config.SHADING ? ['SHADING'] : []
+    );
     const splatShader = compileShader(gl, gl.FRAGMENT_SHADER, splatShaderSource);
     const advectionShader = compileShader(gl, gl.FRAGMENT_SHADER, advectionShaderSource);
     const divergenceShader = compileShader(gl, gl.FRAGMENT_SHADER, divergenceShaderSource);
@@ -129,12 +132,7 @@ function SplashCursor({
     const texelSizeY = 1.0 / simHeight;
     const texelSize = [texelSizeX, texelSizeY];
 
-    // Helper function to render
-    function blit(destination: WebGLFramebuffer | null) {
-      gl.bindFramebuffer(gl.FRAMEBUFFER, destination);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-    }
-
+    // Resize canvas function
     function resizeCanvas() {
       const displayWidth = canvas.clientWidth;
       const displayHeight = canvas.clientHeight;
@@ -145,102 +143,30 @@ function SplashCursor({
       }
     }
 
-    // Mouse interaction variables
-    let mouseDown = false;
-    let lastMouseX = 0;
-    let lastMouseY = 0;
-    let colorCounter = 0;
+    // Mouse interaction state
+    const mouseState = createMouseState();
 
-    function handleMouseDown(e: MouseEvent) {
-      mouseDown = true;
-      lastMouseX = e.offsetX;
-      lastMouseY = e.offsetY;
-    }
-
-    function handleMouseMove(e: MouseEvent) {
-      if (!mouseDown) return;
-      
-      const mouseX = e.offsetX;
-      const mouseY = e.offsetY;
-      
-      const dx = mouseX - lastMouseX;
-      const dy = mouseY - lastMouseY;
-      
-      const velocity = { x: dx * SPLAT_FORCE, y: -dy * SPLAT_FORCE };
-      
-      // Generate color based on counter
-      colorCounter = (colorCounter + COLOR_UPDATE_SPEED / 100) % 360;
-      const color = hslToRgb(colorCounter, 0.7, 0.5);
-      
-      // Add splat at current mouse position
-      addSplat(mouseX, mouseY, velocity.x, velocity.y, color);
-      
-      lastMouseX = mouseX;
-      lastMouseY = mouseY;
-    }
-
-    function handleMouseUp() {
-      mouseDown = false;
-    }
-
-    // Color conversion utility
-    function hslToRgb(h: number, s: number, l: number) {
-      h = h % 360;
-      h /= 360;
-      
-      let r, g, b;
-      
-      if (s === 0) {
-        r = g = b = l;
-      } else {
-        const hue2rgb = (p: number, q: number, t: number) => {
-          if (t < 0) t += 1;
-          if (t > 1) t -= 1;
-          if (t < 1/6) return p + (q - p) * 6 * t;
-          if (t < 1/2) return q;
-          if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
-          return p;
-        };
-        
-        const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
-        const p = 2 * l - q;
-        
-        r = hue2rgb(p, q, h + 1/3);
-        g = hue2rgb(p, q, h);
-        b = hue2rgb(p, q, h - 1/3);
-      }
-      
-      return { r, g, b };
-    }
-
-    // WebGL operations
-    function addSplat(x: number, y: number, dx: number, dy: number, color: { r: number, g: number, b: number }) {
-      splatProgram.bind();
-      
-      gl.uniform1i(splatProgram.uniforms.uTarget, 0);
-      gl.uniform1f(splatProgram.uniforms.uAspectRatio, canvas.width / canvas.height);
-      gl.uniform2f(splatProgram.uniforms.uPoint, x / canvas.width, 1.0 - y / canvas.height);
-      gl.uniform3f(splatProgram.uniforms.uColor, color.r, color.g, color.b);
-      gl.uniform1f(splatProgram.uniforms.uRadius, SPLAT_RADIUS);
-      
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, density.read.texture);
-      
-      gl.bindFramebuffer(gl.FRAMEBUFFER, density.write.fbo);
-      gl.viewport(0, 0, dyeWidth, dyeHeight);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      density.swap();
-      
-      gl.uniform1i(splatProgram.uniforms.uTarget, 0);
-      gl.uniform3f(splatProgram.uniforms.uColor, dx, dy, 0);
-      gl.bindTexture(gl.TEXTURE_2D, velocity.read.texture);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, velocity.write.fbo);
-      gl.viewport(0, 0, simWidth, simHeight);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      velocity.swap();
-    }
+    // Create event handler functions bound to this context
+    const handleMouseDownBound = (e: MouseEvent) => handleMouseDown(e, mouseState);
+    
+    const handleMouseMoveBound = (e: MouseEvent) => handleMouseMove(
+      e, 
+      mouseState, 
+      gl, 
+      splatProgram, 
+      canvas, 
+      density, 
+      velocity, 
+      config.SPLAT_FORCE, 
+      config.COLOR_UPDATE_SPEED, 
+      config.SPLAT_RADIUS,
+      dyeWidth,
+      dyeHeight,
+      simWidth,
+      simHeight
+    );
+    
+    const handleMouseUpBound = () => handleMouseUp(mouseState);
 
     // Main rendering loop
     let lastTime = Date.now();
@@ -252,75 +178,53 @@ function SplashCursor({
       
       resizeCanvas();
       
-      // Step 1: Advect velocity and density
-      advectionProgram.bind();
-      gl.uniform2f(advectionProgram.uniforms.texelSize, texelSize[0], texelSize[1]);
-      gl.uniform1i(advectionProgram.uniforms.uVelocity, 0);
-      gl.uniform1i(advectionProgram.uniforms.uSource, 0);
-      gl.uniform1f(advectionProgram.uniforms.uDeltaT, dt);
-      gl.uniform1f(advectionProgram.uniforms.uDissipation, VELOCITY_DISSIPATION);
-      
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, velocity.read.texture);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, velocity.write.fbo);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.viewport(0, 0, simWidth, simHeight);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      velocity.swap();
-      
-      gl.uniform1i(advectionProgram.uniforms.uVelocity, 0);
-      gl.uniform1i(advectionProgram.uniforms.uSource, 1);
-      gl.uniform1f(advectionProgram.uniforms.uDissipation, DENSITY_DISSIPATION);
-      
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, velocity.read.texture);
-      gl.activeTexture(gl.TEXTURE1);
-      gl.bindTexture(gl.TEXTURE_2D, density.read.texture);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, density.write.fbo);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.viewport(0, 0, dyeWidth, dyeHeight);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
-      density.swap();
-      
-      // Display result
-      gl.viewport(0, 0, canvas.width, canvas.height);
-      displayProgram.bind();
-      gl.uniform1i(displayProgram.uniforms.uTexture, 0);
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, density.read.texture);
-      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-      gl.clear(gl.COLOR_BUFFER_BIT);
-      gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      // Run simulation step
+      stepSimulation(
+        gl,
+        advectionProgram,
+        displayProgram,
+        velocity,
+        density,
+        dt,
+        texelSize,
+        dyeWidth,
+        dyeHeight,
+        simWidth,
+        simHeight,
+        config.VELOCITY_DISSIPATION,
+        config.DENSITY_DISSIPATION,
+        canvas
+      );
       
       requestAnimationFrame(update);
     }
     
     // Set up event listeners
-    canvas.addEventListener('mousedown', handleMouseDown);
-    canvas.addEventListener('mousemove', handleMouseMove);
-    canvas.addEventListener('mouseup', handleMouseUp);
-    canvas.addEventListener('mouseleave', handleMouseUp);
+    canvas.addEventListener('mousedown', handleMouseDownBound);
+    canvas.addEventListener('mousemove', handleMouseMoveBound);
+    canvas.addEventListener('mouseup', handleMouseUpBound);
+    canvas.addEventListener('mouseleave', handleMouseUpBound);
     
     update();
     
     // Clean up
     return () => {
-      canvas.removeEventListener('mousedown', handleMouseDown);
-      canvas.removeEventListener('mousemove', handleMouseMove);
-      canvas.removeEventListener('mouseup', handleMouseUp);
-      canvas.removeEventListener('mouseleave', handleMouseUp);
+      canvas.removeEventListener('mousedown', handleMouseDownBound);
+      canvas.removeEventListener('mousemove', handleMouseMoveBound);
+      canvas.removeEventListener('mouseup', handleMouseUpBound);
+      canvas.removeEventListener('mouseleave', handleMouseUpBound);
     };
   }, [
-    SIM_RESOLUTION,
-    DYE_RESOLUTION,
-    DENSITY_DISSIPATION,
-    VELOCITY_DISSIPATION,
-    SPLAT_RADIUS,
-    SPLAT_FORCE,
-    SHADING,
-    COLOR_UPDATE_SPEED,
-    BACK_COLOR,
-    TRANSPARENT
+    props.SIM_RESOLUTION,
+    props.DYE_RESOLUTION,
+    props.DENSITY_DISSIPATION,
+    props.VELOCITY_DISSIPATION,
+    props.SPLAT_RADIUS,
+    props.SPLAT_FORCE,
+    props.SHADING,
+    props.COLOR_UPDATE_SPEED,
+    props.BACK_COLOR,
+    props.TRANSPARENT
   ]);
 
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />;

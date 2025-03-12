@@ -1,5 +1,4 @@
-
-import { WebGLContext, ShaderUniforms, FrameBuffer } from './types';
+import { WebGLContext, ShaderUniforms, FrameBuffer, ExtensionFormats } from './types';
 
 export const initWebGL = (canvas: HTMLCanvasElement): WebGLContext | null => {
   const params = {
