@@ -7,6 +7,7 @@ import LoadingContent from '@/components/pdf/LoadingContent';
 import ResultContent from '@/components/pdf/ResultContent';
 import UploadFormContent from '@/components/pdf/UploadFormContent';
 import { Button } from '@/components/ui/button';
+import { processContent } from '@/components/result/ContentParser';
 
 const PdfUpload = () => {
   const navigate = useNavigate();
@@ -106,15 +107,31 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     }
   };
 
+  // For debugging - check if we have data that can be parsed
+  const hasValidData = () => {
+    if (!lastRawResponse) return false;
+    try {
+      const sections = processContent(lastRawResponse);
+      console.log("Processed sections:", sections);
+      return sections.length > 0;
+    } catch (e) {
+      console.error("Error processing content:", e);
+      return false;
+    }
+  };
+
   if (isLoading) {
     return <LoadingContent />;
   }
   
-  if (result) {
+  if (result || (lastRawResponse && hasValidData())) {
+    // Use lastRawResponse directly if result is empty but we have raw response data
+    const displayContent = result || lastRawResponse;
+    
     return (
       <div className="relative">
         <ResultContent
-          result={result}
+          result={displayContent}
           onBack={handleBack}
           onNavigate={handleHistoryNavigation}
           canGoBack={canGoBack}
