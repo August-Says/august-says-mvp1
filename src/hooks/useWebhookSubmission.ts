@@ -1,11 +1,15 @@
 
 import { useState } from 'react';
-import { toast } from 'sonner';
 import { WebhookOptions, WebhookSubmissionResult } from '@/types/webhook';
 import { formatWebhookResponse } from '@/utils/webhookResponseFormatter';
 import { defaultFallbackGenerator } from '@/utils/fallbackContentGenerator';
 import { useSubmissionHistory } from '@/hooks/useSubmissionHistory';
 import { executeWebhookRequest } from '@/utils/webhookRequestHandler';
+import { 
+  handleWebhookError, 
+  handleEmptyWebhookResponse,
+  handleSuccessfulResponse
+} from '@/utils/errorHandler';
 
 export const useWebhookSubmission = (options?: WebhookOptions): WebhookSubmissionResult => {
   const [isLoading, setIsLoading] = useState(false);
@@ -53,19 +57,15 @@ export const useWebhookSubmission = (options?: WebhookOptions): WebhookSubmissio
         });
         
         setResult(formattedResult);
-        toast.success('Canvas generated successfully!');
+        handleSuccessfulResponse('Canvas generated successfully!');
         return response.data;
       } else {
-        console.log('Using fallback data because no valid response was received');
-        toast.warning('No data received from webhook. Using fallback content.');
-        const fallbackContent = fallbackGenerator(contentValue || '');
+        const fallbackContent = handleEmptyWebhookResponse(fallbackGenerator, contentValue || '');
         setResult(fallbackContent);
         return fallbackContent;
       }
     } catch (error) {
-      console.error('Webhook error:', error);
-      toast.error('Failed to generate canvas. Using fallback data.');
-      const fallbackContent = fallbackGenerator(contentValue || '');
+      const fallbackContent = handleWebhookError(error, fallbackGenerator, contentValue || '');
       setResult(fallbackContent);
       return fallbackContent;
     } finally {

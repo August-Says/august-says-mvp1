@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
+import { handleAsyncOperation } from '@/utils/errorHandler';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -43,7 +43,7 @@ const Login = () => {
     
     setIsLoading(true);
     
-    try {
+    const result = await handleAsyncOperation(async () => {
       // Mock authentication delay
       await new Promise(resolve => setTimeout(resolve, 1000));
       
@@ -52,14 +52,16 @@ const Login = () => {
         localStorage.setItem('isAuthenticated', 'true');
         toast.success('Successfully logged in!');
         navigate('/');
+        return true;
       } else {
-        toast.error('Invalid email or password');
+        throw new Error('Invalid email or password');
       }
-    } catch (error) {
-      toast.error('An error occurred during login');
-    } finally {
-      setIsLoading(false);
-    }
+    }, {
+      defaultErrorMessage: 'An error occurred during login',
+      showToast: true
+    });
+    
+    setIsLoading(false);
   };
 
   return (
