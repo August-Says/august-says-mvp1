@@ -5,6 +5,7 @@ import { WebhookOptions, WebhookSubmissionResult } from '@/types/webhook';
 import { formatWebhookResponse } from '@/utils/webhookResponseFormatter';
 import { defaultFallbackGenerator } from '@/utils/fallbackContentGenerator';
 import { useSubmissionHistory } from '@/hooks/useSubmissionHistory';
+import { executeWebhookRequest } from '@/utils/webhookRequestHandler';
 
 export const useWebhookSubmission = (options?: WebhookOptions): WebhookSubmissionResult => {
   const [isLoading, setIsLoading] = useState(false);
@@ -33,56 +34,17 @@ export const useWebhookSubmission = (options?: WebhookOptions): WebhookSubmissio
     setLastRawResponse('');
     
     try {
-      const queryParams = new URLSearchParams();
-      
-      if (params.additionalNotes) {
-        queryParams.append('additionalNotes', params.additionalNotes);
-        delete params.additionalNotes;
-      }
-      
-      Object.entries(params).forEach(([key, value]) => {
-        if (value) {
-          queryParams.append(key, value);
-        }
+      const response = await executeWebhookRequest({
+        params,
+        contentKey,
+        contentValue,
+        webhookUrl
       });
       
-      if (contentKey && contentValue) {
-        queryParams.append(contentKey, contentValue);
-        console.log(`Sending ${contentKey} to webhook:`, contentValue.substring(0, 100) + '...');
-      }
+      setLastRawResponse(response.rawResponse);
       
-      const fullUrl = `${webhookUrl}?${queryParams.toString()}`;
-      console.log('Making request to:', fullUrl);
-      
-      const response = await fetch(fullUrl, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json'
-        }
-      });
-      
-      console.log('Response status:', response.status);
-      
-      if (!response.ok) {
-        throw new Error(`Webhook responded with status: ${response.status}`);
-      }
-      
-      const responseText = await response.text();
-      console.log('Raw response:', responseText);
-      setLastRawResponse(responseText);
-      
-      let data;
-      try {
-        data = responseText ? JSON.parse(responseText) : null;
-        console.log('Webhook response:', data);
-      } catch (parseError) {
-        console.error('Failed to parse JSON response:', parseError);
-        data = responseText;
-        toast.error('Failed to parse webhook response. See console for details.');
-      }
-      
-      if (data) {
-        const formattedResult = formatWebhookResponse(data);
+      if (response.data) {
+        const formattedResult = formatWebhookResponse(response.data);
         
         addToHistory({
           result: formattedResult,
@@ -92,7 +54,7 @@ export const useWebhookSubmission = (options?: WebhookOptions): WebhookSubmissio
         
         setResult(formattedResult);
         toast.success('Canvas generated successfully!');
-        return data;
+        return response.data;
       } else {
         console.log('Using fallback data because no valid response was received');
         toast.warning('No data received from webhook. Using fallback content.');
