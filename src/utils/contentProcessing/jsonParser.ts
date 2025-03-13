@@ -10,29 +10,181 @@ export const extractSectionsFromJSON = (data: any): Section[] => {
   
   // Handle array of outputs (from n8n webhook)
   if (Array.isArray(data)) {
-    // Process each output item in the array to extract markdown content
-    let allSections: Section[] = [];
+    console.log("Processing array of webhook outputs", data);
     
-    data.forEach((item, index) => {
-      if (item && typeof item === 'object') {
-        // Check if item has an output property that contains markdown
-        let markdownContent = item.output || '';
+    // Specifically process the first 4 output objects in the array
+    // First output object - summary and objective
+    if (data[0] && data[0].output) {
+      let output = data[0].output;
+      
+      // Handle string output (markdown)
+      if (typeof output === 'string') {
+        try {
+          // Try to parse as JSON if it's a stringified JSON
+          output = JSON.parse(output);
+        } catch (e) {
+          // If it's just markdown, add as a section
+          sections.push({
+            title: "Summary",
+            content: output
+          });
+          
+          // Continue to next output
+          return sections;
+        }
+      }
+      
+      // If we have summary in the output
+      if (output.summary) {
+        sections.push({
+          title: "Summary",
+          content: output.summary
+        });
+      }
+      
+      // If we have objective in the output
+      if (output.objective) {
+        sections.push({
+          title: "Objective",
+          content: output.objective
+        });
+      }
+    }
+    
+    // Second output object - outcome with insights and strategic implications
+    if (data[1] && data[1].output) {
+      let output = data[1].output;
+      
+      // Handle string output (markdown)
+      if (typeof output === 'string') {
+        try {
+          output = JSON.parse(output);
+        } catch (e) {
+          sections.push({
+            title: "Outcome",
+            content: output
+          });
+          
+          // Continue processing other outputs
+        }
+      } else if (output.outcome) {
+        // Process insights
+        if (output.outcome.insights && Array.isArray(output.outcome.insights)) {
+          output.outcome.insights.forEach((insight: any) => {
+            if (insight.category && insight.description) {
+              sections.push({
+                title: insight.category,
+                content: insight.description
+              });
+            }
+          });
+        }
         
-        // Remove markdown code block syntax if present
-        markdownContent = markdownContent.replace(/^```markdown\n/g, '').replace(/```$/g, '');
-        
-        // If we have markdown content, try to extract sections from it
-        if (markdownContent) {
-          // For now, treat each output as a separate section with markdown content
-          allSections.push({
-            title: `Section ${index + 1}`,
-            content: markdownContent
+        // Process strategic implications
+        if (output.outcome.strategic_implications && Array.isArray(output.outcome.strategic_implications)) {
+          const implications = output.outcome.strategic_implications.map(
+            (imp: string, i: number) => `${i+1}. ${imp}`
+          ).join('\n\n');
+          
+          sections.push({
+            title: "Strategic Implications",
+            content: implications
           });
         }
       }
-    });
+    }
     
-    return allSections;
+    // Third output object - canvass with definition, format and questions
+    if (data[2] && data[2].output) {
+      let output = data[2].output;
+      
+      // Handle string output (markdown)
+      if (typeof output === 'string') {
+        try {
+          output = JSON.parse(output);
+        } catch (e) {
+          sections.push({
+            title: "Canvass Information",
+            content: output
+          });
+          
+          // Continue processing other outputs
+        }
+      } else if (output.canvass) {
+        // Process canvass definition
+        if (output.canvass.definition) {
+          sections.push({
+            title: "What is a Canvass",
+            content: output.canvass.definition
+          });
+        }
+        
+        // Process recommended format
+        if (output.canvass.recommended_format) {
+          sections.push({
+            title: "Recommended Canvass Format",
+            content: output.canvass.recommended_format
+          });
+        }
+        
+        // Process questions
+        if (output.canvass.questions && Array.isArray(output.canvass.questions)) {
+          let questionsContent = '';
+          output.canvass.questions.forEach((q: any, i: number) => {
+            questionsContent += `Question ${i+1}: ${q.question}\n\nOptions:\n`;
+            if (q.options && Array.isArray(q.options)) {
+              q.options.forEach((opt: string) => {
+                questionsContent += `- ${opt}\n`;
+              });
+            }
+            questionsContent += '\n';
+          });
+          
+          sections.push({
+            title: "Questions",
+            content: questionsContent
+          });
+        }
+      }
+    }
+    
+    // Fourth output object - activation add-ons
+    if (data[3] && data[3].output) {
+      let output = data[3].output;
+      
+      // Handle string output (markdown)
+      if (typeof output === 'string') {
+        try {
+          output = JSON.parse(output);
+        } catch (e) {
+          sections.push({
+            title: "Activation Add-ons",
+            content: output
+          });
+          
+          // Continue processing other outputs
+        }
+      } else if (output.activation_add_ons && Array.isArray(output.activation_add_ons)) {
+        let addonsContent = '';
+        output.activation_add_ons.forEach((addon: any, i: number) => {
+          addonsContent += `${i+1}. ${addon.strategy}\n\n`;
+          if (addon.details) {
+            addonsContent += `Execution Plan: ${addon.details}\n\n`;
+          }
+          if (addon.copy_example) {
+            addonsContent += `Copy Example: ${addon.copy_example}\n\n`;
+          }
+        });
+        
+        sections.push({
+          title: "Activation Add-ons",
+          content: addonsContent
+        });
+      }
+    }
+    
+    console.log(`Extracted ${sections.length} sections from webhook outputs array`);
+    return sections;
   }
   
   // Handle single object with extractSectionsFromSingleObject for non-array responses
