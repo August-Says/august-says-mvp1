@@ -1,5 +1,5 @@
 
-import { Section } from './types';
+import type { Section } from './types';
 import { splitIntoSections } from './markdownParser';
 import { extractSectionsFromJSON } from './jsonParser';
 import { formatSectionTitle } from './sectionFormatter';
@@ -32,4 +32,5 @@ export const processContent = (content: string): Section[] => {
   return splitIntoSections(content);
 };
 
-export { splitIntoSections, extractSectionsFromJSON, formatSectionTitle, Section };
+export { splitIntoSections, extractSectionsFromJSON, formatSectionTitle };
+export type { Section };

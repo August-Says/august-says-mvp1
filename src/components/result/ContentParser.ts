@@ -1,4 +1,6 @@
 
-import { processContent, formatSectionTitle, Section } from '@/utils/contentProcessing';
+import { processContent, formatSectionTitle } from '@/utils/contentProcessing';
+import type { Section } from '@/utils/contentProcessing/types';
 
-export { processContent, formatSectionTitle, Section };
+export { processContent, formatSectionTitle };
+export type { Section };
