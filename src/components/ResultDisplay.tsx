@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import PdfExportButton from '@/components/result/PdfExportButton';
@@ -15,6 +15,7 @@ interface ResultDisplayProps {
 const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const processedSections = processContent(result);
+  const [showRawJson, setShowRawJson] = useState(false);
   
   return (
     <motion.div 
@@ -37,7 +38,7 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         contentRef={contentRef}
       />
       
-      <div className="mt-8 pt-4 border-t border-white/10 flex justify-center">
+      <div className="mt-8 pt-4 border-t border-white/10 flex justify-between items-center">
         <Button
           onClick={onBack}
           variant="outline"
@@ -45,7 +46,24 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         >
           Generate New Canvas
         </Button>
+        
+        <Button
+          onClick={() => setShowRawJson(!showRawJson)}
+          variant="ghost"
+          className="text-white/70 hover:text-white hover:bg-white/10"
+        >
+          {showRawJson ? "Hide Raw JSON" : "Show Raw JSON"}
+        </Button>
       </div>
+      
+      {showRawJson && (
+        <div className="mt-6 p-4 bg-black/20 rounded-md">
+          <h3 className="text-lg font-medium text-white mb-2">Raw Response Data:</h3>
+          <pre className="text-xs text-white/70 overflow-auto max-h-[400px] p-2">
+            {result}
+          </pre>
+        </div>
+      )}
     </motion.div>
   );
 };
