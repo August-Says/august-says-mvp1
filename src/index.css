@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Give+You+Glory|Exo:800&display=swap');
 
@@ -46,6 +47,18 @@
 
   body {
     @apply bg-background text-foreground antialiased font-sans;
+    /* Hide default cursor on home page */
+    cursor: none;
+  }
+
+  /* Hide cursor for specific pages */
+  .homepage {
+    cursor: none;
+  }
+
+  /* Show the cursor on other pages */
+  body:not(.homepage) {
+    cursor: auto;
   }
 
   ::selection {
