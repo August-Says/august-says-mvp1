@@ -9,6 +9,7 @@ export interface FormData {
   location: string;
   productService: string;
   relationalSentiment: string;
+  additionalNotes: string;
 }
 
 export const FORM_DATA_STORAGE_KEY = 'marketing-form-data';

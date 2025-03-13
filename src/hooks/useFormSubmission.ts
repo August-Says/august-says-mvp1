@@ -22,7 +22,8 @@ export const useFormSubmission = () => {
       targetAudience: '',
       location: '',
       productService: '',
-      relationalSentiment: ''
+      relationalSentiment: '',
+      additionalNotes: ''
     };
   });
   
@@ -62,7 +63,8 @@ export const useFormSubmission = () => {
       targetAudience: '',
       location: '',
       productService: '',
-      relationalSentiment: ''
+      relationalSentiment: '',
+      additionalNotes: ''
     });
     setErrors({});
     toast.success('Form has been reset');

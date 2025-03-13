@@ -7,6 +7,7 @@ import ClientInfoSection from '@/components/marketing-form/ClientInfoSection';
 import EventSection from '@/components/marketing-form/EventSection';
 import AudienceSection from '@/components/marketing-form/AudienceSection';
 import ProductSection from '@/components/marketing-form/ProductSection';
+import { FormField, FormTextarea } from '@/components/ui/FormComponents';
 
 interface MarketingFormProps {
   formData: FormData;
@@ -64,6 +65,26 @@ const MarketingForm = ({
           onChange={onChange}
         />
       </FormSection>
+      
+      <div className="mb-6">
+        <h3 className="text-lg font-medium text-white/90 mb-4 border-b border-white/20 pb-2">
+          Additional Information
+        </h3>
+        <FormField
+          label="Additional Notes"
+          htmlFor="additionalNotes"
+          error={errors.additionalNotes}
+          className="col-span-2"
+        >
+          <FormTextarea
+            id="additionalNotes"
+            value={formData.additionalNotes || ''}
+            onChange={(e) => onChange('additionalNotes', e.target.value)}
+            placeholder="Add any additional context or notes here..."
+            rows={4}
+          />
+        </FormField>
+      </div>
       
       <div className="mt-8 flex justify-center gap-4">
         <Button 
