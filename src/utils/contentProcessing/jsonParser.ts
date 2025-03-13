@@ -1,4 +1,3 @@
-
 import { Section } from './types';
 
 /**
@@ -11,28 +10,24 @@ export const extractSectionsFromJSON = (data: any): Section[] => {
   
   // Handle array of outputs (from n8n webhook)
   if (Array.isArray(data)) {
-    // Combine all outputs into a single data object
-    const combinedData: any = {};
-    
-    data.forEach(item => {
-      if (item && item.output) {
-        // Merge each output object into our combined data
-        Object.assign(combinedData, item.output);
-      }
-    });
-    
-    // If we've successfully combined data, use that instead
-    if (Object.keys(combinedData).length > 0) {
-      return extractSectionsFromSingleObject(combinedData);
-    }
-
-    // If we couldn't merge the outputs, try processing each item individually
+    // Process each output item in the array to extract markdown content
     let allSections: Section[] = [];
-    data.forEach(item => {
+    
+    data.forEach((item, index) => {
       if (item && typeof item === 'object') {
-        const itemSections = extractSectionsFromSingleObject(item.output || item);
-        if (itemSections.length > 0) {
-          allSections = [...allSections, ...itemSections];
+        // Check if item has an output property that contains markdown
+        let markdownContent = item.output || '';
+        
+        // Remove markdown code block syntax if present
+        markdownContent = markdownContent.replace(/^```markdown\n/g, '').replace(/```$/g, '');
+        
+        // If we have markdown content, try to extract sections from it
+        if (markdownContent) {
+          // For now, treat each output as a separate section with markdown content
+          allSections.push({
+            title: `Section ${index + 1}`,
+            content: markdownContent
+          });
         }
       }
     });
@@ -40,7 +35,7 @@ export const extractSectionsFromJSON = (data: any): Section[] => {
     return allSections;
   }
   
-  // Handle single object
+  // Handle single object with extractSectionsFromSingleObject for non-array responses
   return extractSectionsFromSingleObject(data);
 };
 

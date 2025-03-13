@@ -21,10 +21,26 @@ const renderMarkdownContent = (content: string) => {
   return (
     <div>
       {lines.map((line, lineIndex) => {
+        // Handle headings (## Heading)
+        if (line.trim().startsWith('#')) {
+          const level = line.trim().match(/^(#+)/)?.[0].length || 1;
+          const text = line.trim().replace(/^#+\s+/, '');
+          
+          if (level === 1) {
+            return <h2 key={lineIndex} className="text-2xl font-bold text-white/90 mt-6 mb-4">{text}</h2>;
+          } else if (level === 2) {
+            return <h3 key={lineIndex} className="text-xl font-semibold text-white/90 mt-5 mb-3">{text}</h3>;
+          } else if (level === 3) {
+            return <h4 key={lineIndex} className="text-lg font-medium text-white/90 mt-4 mb-2">{text}</h4>;
+          } else {
+            return <h5 key={lineIndex} className="text-base font-medium text-white/90 mt-3 mb-2">{text}</h5>;
+          }
+        }
+        
         // Handle bullet points
         if (line.trim().startsWith('-') || line.trim().startsWith('*')) {
           return (
-            <div key={lineIndex} className="flex items-start space-x-2 my-1">
+            <div key={lineIndex} className="flex items-start space-x-2 my-1 ml-4">
               <span className="text-cloudai-purple">•</span>
               <p>{line.trim().substring(1).trim()}</p>
             </div>
@@ -35,11 +51,112 @@ const renderMarkdownContent = (content: string) => {
         const numberedMatch = line.trim().match(/^(\d+)\.\s(.+)$/);
         if (numberedMatch) {
           return (
-            <div key={lineIndex} className="flex items-start space-x-2 my-1">
+            <div key={lineIndex} className="flex items-start space-x-2 my-1 ml-4">
               <span className="text-cloudai-purple min-w-[20px]">{numberedMatch[1]}.</span>
               <p>{numberedMatch[2]}</p>
             </div>
           );
+        }
+        
+        // Handle bold text
+        if (line.includes('**') && line.match(/\*\*([^*]+)\*\*/)) {
+          const parts = [];
+          let lastIndex = 0;
+          let match;
+          const regex = /\*\*([^*]+)\*\*/g;
+          
+          while ((match = regex.exec(line)) !== null) {
+            // Add text before the match
+            if (match.index > lastIndex) {
+              parts.push({
+                type: 'text',
+                content: line.substring(lastIndex, match.index),
+                key: `${lineIndex}-text-${lastIndex}`
+              });
+            }
+            
+            // Add the bold text
+            parts.push({
+              type: 'bold',
+              content: match[1],
+              key: `${lineIndex}-bold-${match.index}`
+            });
+            
+            lastIndex = match.index + match[0].length;
+          }
+          
+          // Add any remaining text
+          if (lastIndex < line.length) {
+            parts.push({
+              type: 'text',
+              content: line.substring(lastIndex),
+              key: `${lineIndex}-text-${lastIndex}`
+            });
+          }
+          
+          return (
+            <p key={lineIndex} className="my-1">
+              {parts.map(part => {
+                if (part.type === 'bold') {
+                  return <strong key={part.key} className="font-bold">{part.content}</strong>;
+                }
+                return <span key={part.key}>{part.content}</span>;
+              })}
+            </p>
+          );
+        }
+        
+        // Handle italic text with single asterisks
+        if (line.includes('*') && line.match(/\*([^*]+)\*/)) {
+          const parts = [];
+          let lastIndex = 0;
+          let match;
+          const regex = /\*([^*]+)\*/g;
+          
+          while ((match = regex.exec(line)) !== null) {
+            // Add text before the match
+            if (match.index > lastIndex) {
+              parts.push({
+                type: 'text',
+                content: line.substring(lastIndex, match.index),
+                key: `${lineIndex}-text-${lastIndex}`
+              });
+            }
+            
+            // Add the italic text
+            parts.push({
+              type: 'italic',
+              content: match[1],
+              key: `${lineIndex}-italic-${match.index}`
+            });
+            
+            lastIndex = match.index + match[0].length;
+          }
+          
+          // Add any remaining text
+          if (lastIndex < line.length) {
+            parts.push({
+              type: 'text',
+              content: line.substring(lastIndex),
+              key: `${lineIndex}-text-${lastIndex}`
+            });
+          }
+          
+          return (
+            <p key={lineIndex} className="my-1">
+              {parts.map(part => {
+                if (part.type === 'italic') {
+                  return <em key={part.key} className="italic">{part.content}</em>;
+                }
+                return <span key={part.key}>{part.content}</span>;
+              })}
+            </p>
+          );
+        }
+        
+        // Handle horizontal rule
+        if (line.trim() === '---') {
+          return <hr key={lineIndex} className="my-4 border-white/20" />;
         }
         
         // Handle questions (common in our webhook responses)
