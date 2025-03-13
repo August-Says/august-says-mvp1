@@ -1,5 +1,5 @@
 
-import { FormData } from "@/hooks/useFormSubmission";
+import { FormData } from "@/types/form";
 
 export const validateFormData = (formData: FormData): Record<string, string> => {
   const errors: Record<string, string> = {};

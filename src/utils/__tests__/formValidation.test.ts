@@ -14,7 +14,8 @@ describe('validateFormData', () => {
       targetAudience: 'Business Professionals',
       location: 'North America',
       productService: 'Software',
-      relationalSentiment: 'Trust'
+      relationalSentiment: 'Trust',
+      additionalNotes: ''
     };
 
     const errors = validateFormData(validForm);
@@ -31,7 +32,8 @@ describe('validateFormData', () => {
       targetAudience: '',
       location: '',
       productService: '',
-      relationalSentiment: ''
+      relationalSentiment: '',
+      additionalNotes: ''
     };
 
     const errors = validateFormData(emptyForm);
@@ -48,6 +50,8 @@ describe('validateFormData', () => {
     
     // Event is not required by default
     expect(errors.event).toBeUndefined();
+    // additionalNotes is not required
+    expect(errors.additionalNotes).toBeUndefined();
   });
 
   it('should require event field when sponsored is "Yes Sponsored"', () => {
@@ -60,7 +64,8 @@ describe('validateFormData', () => {
       targetAudience: 'Business Professionals',
       location: 'North America',
       productService: 'Software',
-      relationalSentiment: 'Trust'
+      relationalSentiment: 'Trust',
+      additionalNotes: ''
     };
 
     const errors = validateFormData(sponsoredForm);
@@ -78,7 +83,8 @@ describe('validateFormData', () => {
       targetAudience: 'Business Professionals',
       location: 'North America',
       productService: 'Software',
-      relationalSentiment: 'Trust'
+      relationalSentiment: 'Trust',
+      additionalNotes: ''
     };
 
     const errors = validateFormData(nonSponsoredForm);
@@ -95,7 +101,8 @@ describe('validateFormData', () => {
       targetAudience: '',
       location: 'North America',
       productService: '',
-      relationalSentiment: 'Trust'
+      relationalSentiment: 'Trust',
+      additionalNotes: ''
     };
 
     const errors = validateFormData(partialForm);
