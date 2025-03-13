@@ -124,9 +124,12 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     return <LoadingContent />;
   }
   
-  if (result || (lastRawResponse && hasValidData())) {
+  // Use the raw response directly if it's JSON and can be parsed into sections
+  const shouldUseRawResponse = !result && lastRawResponse && hasValidData();
+  
+  if (result || shouldUseRawResponse) {
     // Use lastRawResponse directly if result is empty but we have raw response data
-    const displayContent = result || lastRawResponse;
+    const displayContent = shouldUseRawResponse ? lastRawResponse : result;
     
     return (
       <div className="relative">

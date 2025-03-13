@@ -9,6 +9,49 @@ export const extractSectionsFromJSON = (data: any): Section[] => {
   
   const sections: Section[] = [];
   
+  // Handle array of outputs (from n8n webhook)
+  if (Array.isArray(data)) {
+    // Combine all outputs into a single data object
+    const combinedData: any = {};
+    
+    data.forEach(item => {
+      if (item && item.output) {
+        // Merge each output object into our combined data
+        Object.assign(combinedData, item.output);
+      }
+    });
+    
+    // If we've successfully combined data, use that instead
+    if (Object.keys(combinedData).length > 0) {
+      return extractSectionsFromSingleObject(combinedData);
+    }
+
+    // If we couldn't merge the outputs, try processing each item individually
+    let allSections: Section[] = [];
+    data.forEach(item => {
+      if (item && typeof item === 'object') {
+        const itemSections = extractSectionsFromSingleObject(item.output || item);
+        if (itemSections.length > 0) {
+          allSections = [...allSections, ...itemSections];
+        }
+      }
+    });
+    
+    return allSections;
+  }
+  
+  // Handle single object
+  return extractSectionsFromSingleObject(data);
+};
+
+/**
+ * Extracts sections from a single object following our schema format
+ */
+const extractSectionsFromSingleObject = (data: any): Section[] => {
+  if (!data) return [];
+  
+  const sections: Section[] = [];
+  
   // Process Report Title
   if (data.report_title) {
     sections.push({
