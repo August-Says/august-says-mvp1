@@ -66,7 +66,7 @@ const Home = () => {
       width: 32,
       height: 32,
       backgroundColor: "rgba(155, 135, 245, 0.4)",
-      mixBlendMode: "difference",
+      mixBlendMode: "difference" as const, // Use const assertion to fix type
       transition: {
         type: "spring",
         mass: 0.1,
@@ -120,7 +120,7 @@ const Home = () => {
           height: 16,
           borderRadius: "50%",
           backgroundColor: "rgba(155, 135, 245, 0.8)",
-          mixBlendMode: "difference"
+          mixBlendMode: "difference" as const // Use const assertion to fix type
         }}
       />
       
@@ -139,7 +139,7 @@ const Home = () => {
           borderRadius: "50%",
           border: "2px solid rgba(155, 135, 245, 0.4)",
           opacity: 0.6,
-          mixBlendMode: "difference"
+          mixBlendMode: "difference" as const // Use const assertion to fix type
         }}
       />
 
