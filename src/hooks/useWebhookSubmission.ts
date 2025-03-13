@@ -18,6 +18,7 @@ export const useWebhookSubmission = (options?: WebhookOptions) => {
   const [result, setResult] = useState('');
   const [submissionHistory, setSubmissionHistory] = useState<SubmissionHistory[]>([]);
   const [currentHistoryIndex, setCurrentHistoryIndex] = useState(-1);
+  const [lastRawResponse, setLastRawResponse] = useState<string>('');
 
   const defaultWebhookUrl = 'https://sonarai.app.n8n.cloud/webhook-test/715d27f7-f730-437c-8abe-cda82e04210e';
   const webhookUrl = options?.webhookUrl || defaultWebhookUrl;
@@ -57,6 +58,7 @@ Detailed breakdown of primary and secondary audience segments.
     contentValue?: string
   ) => {
     setIsLoading(true);
+    setLastRawResponse('');
     
     try {
       const queryParams = new URLSearchParams();
@@ -97,6 +99,7 @@ Detailed breakdown of primary and secondary audience segments.
       
       const responseText = await response.text();
       console.log('Raw response:', responseText);
+      setLastRawResponse(responseText);
       
       let data;
       try {
@@ -105,17 +108,25 @@ Detailed breakdown of primary and secondary audience segments.
       } catch (parseError) {
         console.error('Failed to parse JSON response:', parseError);
         data = responseText;
+        toast.error('Failed to parse webhook response. See console for details.');
       }
       
       let resultData;
       if (data) {
         if (Array.isArray(data)) {
           const combinedOutput = data
-            .map(item => item.output || item.canvas || '')
+            .map(item => {
+              if (typeof item.output === 'object') {
+                return JSON.stringify(item.output, null, 2);
+              }
+              return item.output || item.canvas || '';
+            })
             .join('\n\n---\n\n');
           resultData = combinedOutput;
+        } else if (typeof data === 'object') {
+          resultData = data.output || data.canvas || JSON.stringify(data, null, 2);
         } else {
-          resultData = data.output || data.canvas || JSON.stringify(data);
+          resultData = String(data);
         }
         
         const historyEntry: SubmissionHistory = {
@@ -131,9 +142,9 @@ Detailed breakdown of primary and secondary audience segments.
         return data;
       } else {
         console.log('Using fallback data because no valid response was received');
+        toast.warning('No data received from webhook. Using fallback content.');
         const fallbackContent = fallbackGenerator(contentValue || '');
         setResult(fallbackContent);
-        toast.info('Used fallback canvas data');
         return fallbackContent;
       }
     } catch (error) {
@@ -156,6 +167,7 @@ Detailed breakdown of primary and secondary audience segments.
     hasHistory: submissionHistory.length > 0,
     canGoBack: currentHistoryIndex > 0,
     canGoForward: currentHistoryIndex < submissionHistory.length - 1,
-    currentHistoryEntry: submissionHistory[currentHistoryIndex]
+    currentHistoryEntry: submissionHistory[currentHistoryIndex],
+    lastRawResponse
   };
 };

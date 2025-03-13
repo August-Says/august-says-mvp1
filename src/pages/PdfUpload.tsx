@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWebhookSubmission } from '@/hooks/useWebhookSubmission';
@@ -5,10 +6,12 @@ import { useProgressAnimation } from '@/hooks/useProgressAnimation';
 import LoadingContent from '@/components/pdf/LoadingContent';
 import ResultContent from '@/components/pdf/ResultContent';
 import UploadFormContent from '@/components/pdf/UploadFormContent';
+import { Button } from '@/components/ui/button';
 
 const PdfUpload = () => {
   const navigate = useNavigate();
   const [textContent, setTextContent] = useState('');
+  const [showRawResponse, setShowRawResponse] = useState(false);
   
   const generateFallbackCanvas = (content: string) => {
     return `# Generated Marketing Canvas
@@ -68,7 +71,8 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     callWebhook,
     navigateHistory,
     canGoBack,
-    canGoForward
+    canGoForward,
+    lastRawResponse
   } = useWebhookSubmission({
     fallbackGenerator: generateFallbackCanvas
   });
@@ -108,13 +112,33 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
   
   if (result) {
     return (
-      <ResultContent
-        result={result}
-        onBack={handleBack}
-        onNavigate={handleHistoryNavigation}
-        canGoBack={canGoBack}
-        canGoForward={canGoForward}
-      />
+      <div className="relative">
+        <ResultContent
+          result={result}
+          onBack={handleBack}
+          onNavigate={handleHistoryNavigation}
+          canGoBack={canGoBack}
+          canGoForward={canGoForward}
+        />
+        
+        {lastRawResponse && (
+          <div className="fixed bottom-4 right-4">
+            <Button 
+              onClick={() => setShowRawResponse(!showRawResponse)} 
+              variant="outline"
+              className="bg-purple-600/80 text-white hover:bg-purple-700"
+            >
+              {showRawResponse ? 'Hide Raw Response' : 'Show Raw Response'}
+            </Button>
+            
+            {showRawResponse && (
+              <div className="fixed bottom-16 right-4 max-w-md max-h-96 overflow-auto bg-black/90 p-4 rounded-lg text-white/90 text-xs font-mono">
+                <pre>{lastRawResponse}</pre>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     );
   }
 
