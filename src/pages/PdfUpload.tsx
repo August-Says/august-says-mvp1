@@ -122,7 +122,7 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
         />
         
         {lastRawResponse && (
-          <div className="fixed bottom-4 right-4">
+          <div className="fixed bottom-4 right-4 z-50">
             <Button 
               onClick={() => setShowRawResponse(!showRawResponse)} 
               variant="outline"
@@ -132,8 +132,18 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
             </Button>
             
             {showRawResponse && (
-              <div className="fixed bottom-16 right-4 max-w-md max-h-96 overflow-auto bg-black/90 p-4 rounded-lg text-white/90 text-xs font-mono">
-                <pre>{lastRawResponse}</pre>
+              <div className="fixed bottom-16 right-4 w-full max-w-2xl max-h-[70vh] overflow-auto bg-black/90 p-4 rounded-lg text-white/90 text-xs font-mono z-50 shadow-xl border border-purple-500">
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-white text-sm font-bold">Raw Webhook Response</h3>
+                  <Button 
+                    onClick={() => setShowRawResponse(false)}
+                    variant="ghost" 
+                    className="h-6 w-6 p-0 text-white hover:bg-purple-800"
+                  >
+                    ✕
+                  </Button>
+                </div>
+                <pre className="whitespace-pre-wrap break-words">{lastRawResponse}</pre>
               </div>
             )}
           </div>
