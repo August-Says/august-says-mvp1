@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { 
@@ -16,6 +17,7 @@ interface PdfUploadFormProps {
 const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps) => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [textContent, setTextContent] = useState(initialTextContent);
+  const [additionalNotes, setAdditionalNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = (activeTab: 'upload' | 'text') => {
@@ -45,9 +47,15 @@ const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps
     }
     
     if (activeTab === 'text') {
-      onSubmit(textContent, 'text');
+      const contentWithNotes = additionalNotes.trim() 
+        ? `${textContent}\n\nADDITIONAL NOTES:\n${additionalNotes}`
+        : textContent;
+      onSubmit(contentWithNotes, 'text');
     } else {
-      onSubmit(pdfFile?.name || 'Uploaded PDF', 'upload');
+      const fileNameWithNotes = additionalNotes.trim()
+        ? `${pdfFile?.name || 'Uploaded PDF'}\n\nADDITIONAL NOTES:\n${additionalNotes}`
+        : pdfFile?.name || 'Uploaded PDF';
+      onSubmit(fileNameWithNotes, 'upload');
     }
   };
 
@@ -83,6 +91,20 @@ const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps
               />
             </FormField>
             
+            <FormField
+              label="Additional Notes"
+              htmlFor="additionalNotes"
+              className="mt-6"
+            >
+              <FormTextarea
+                id="additionalNotes"
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                placeholder="Add any additional context or notes here..."
+                rows={3}
+              />
+            </FormField>
+            
             <div className="mt-8 flex justify-center">
               <Button 
                 type="submit" 
@@ -110,6 +132,20 @@ const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps
                 placeholder="Paste the document text here..."
                 error={errors.text}
                 rows={10}
+              />
+            </FormField>
+            
+            <FormField
+              label="Additional Notes"
+              htmlFor="additionalNotesText"
+              className="mt-6"
+            >
+              <FormTextarea
+                id="additionalNotesText"
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                placeholder="Add any additional context or notes here..."
+                rows={3}
               />
             </FormField>
             

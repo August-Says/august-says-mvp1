@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -59,6 +60,13 @@ Detailed breakdown of primary and secondary audience segments.
     
     try {
       const queryParams = new URLSearchParams();
+      
+      // Add additional notes as a separate parameter if present
+      if (params.additionalNotes) {
+        queryParams.append('additionalNotes', params.additionalNotes);
+        // Remove from params to avoid duplication
+        delete params.additionalNotes;
+      }
       
       Object.entries(params).forEach(([key, value]) => {
         if (value) {
