@@ -1,12 +1,10 @@
 
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
-import pdfParse from 'pdf-parse';
 
 interface FileUploadProps {
   id: string;
   onFileChange: (file: File | null) => void;
-  onTextExtracted?: (text: string) => void;
   accept?: string;
   error?: string;
   className?: string;
@@ -15,42 +13,17 @@ interface FileUploadProps {
 export const FileUpload = ({
   id,
   onFileChange,
-  onTextExtracted,
   accept = ".pdf",
   error,
   className
 }: FileUploadProps) => {
   const [fileName, setFileName] = useState<string>("");
-  const [isProcessing, setIsProcessing] = useState(false);
   
-  const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
-    
     if (file) {
       setFileName(file.name);
       onFileChange(file);
-      
-      // Extract text from PDF if it's a PDF file and we have a callback
-      if (file.type === 'application/pdf' && onTextExtracted) {
-        setIsProcessing(true);
-        try {
-          console.log('Starting PDF extraction');
-          const arrayBuffer = await file.arrayBuffer();
-          const buffer = new Uint8Array(arrayBuffer);
-          console.log('Buffer created, calling pdfParse');
-          const data = await pdfParse(buffer);
-          console.log('PDF parsing complete, text length:', data.text.length);
-          onTextExtracted(data.text);
-        } catch (error) {
-          console.error('Error parsing PDF:', error);
-          // If extraction fails, at least provide the file name so the form can still submit
-          if (onTextExtracted) {
-            onTextExtracted(`Failed to extract text from ${file.name}. Error: ${error}`);
-          }
-        } finally {
-          setIsProcessing(false);
-        }
-      }
     } else {
       setFileName("");
       onFileChange(null);
@@ -89,9 +62,7 @@ export const FileUpload = ({
             />
           </svg>
           <div className="text-sm text-white/80">
-            {isProcessing ? (
-              <span>Extracting text...</span>
-            ) : fileName ? (
+            {fileName ? (
               <span>{fileName}</span>
             ) : (
               <>

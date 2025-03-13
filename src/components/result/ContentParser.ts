@@ -6,7 +6,6 @@ interface Section {
 
 export const processContent = (content: string): Section[] => {
   try {
-    console.log('Processing content:', content.substring(0, 100) + '...');
     const parsed = JSON.parse(content);
     if (Array.isArray(parsed)) {
       return parsed.flatMap(item => {
@@ -19,30 +18,17 @@ export const processContent = (content: string): Section[] => {
       return splitIntoSections(output);
     }
   } catch (e) {
-    console.log('Not valid JSON, treating as plain text');
     return splitIntoSections(content);
   }
   return [];
 };
 
 export const splitIntoSections = (content: string): Section[] => {
-  console.log('Splitting into sections, content length:', content.length);
-  // Match headers like ### SUMMARY, ## OBJECTIVE, **STRATEGIC IMPLICATIONS**, etc.
   const sectionPattern = /(?:###\s*|##\s*|\*\*)(SUMMARY|OBJECTIVE|THE OUTCOME|STRATEGIC IMPLICATIONS|WHAT IS A CANVASS|RECOMMENDED CANVASS FORMAT)(?:\s*:|\*\*\s*:|\*\*)/gi;
   
   const matches = [...content.matchAll(new RegExp(sectionPattern, 'gi'))];
-  console.log('Found sections:', matches.length);
   
   const sections: Section[] = [];
-  
-  // If no sections found and content is not empty, treat the whole content as one section
-  if (matches.length === 0 && content.trim()) {
-    sections.push({
-      title: 'SUMMARY',
-      content: content.trim()
-    });
-    return sections;
-  }
   
   for (let i = 0; i < matches.length; i++) {
     const match = matches[i];
@@ -63,7 +49,6 @@ export const splitIntoSections = (content: string): Section[] => {
     }
   }
   
-  console.log('Processed sections:', sections.length);
   return sections;
 };
 
