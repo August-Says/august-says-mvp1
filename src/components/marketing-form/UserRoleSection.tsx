@@ -1,5 +1,5 @@
 
-import { FormField, FormSelect } from '@/components/ui/FormComponents';
+import { FormField, FormSelectWithCustomOption } from '@/components/ui/FormComponents';
 import { FormData } from '@/hooks/useFormSubmission';
 import * as options from '@/constants/formOptions';
 
@@ -16,13 +16,14 @@ const UserRoleSection = ({ formData, errors, onChange }: UserRoleSectionProps) =
       htmlFor="role" 
       error={errors.role}
     >
-      <FormSelect
+      <FormSelectWithCustomOption
         id="role"
         value={formData.role}
         onChange={(value) => onChange('role', value)}
         options={options.roleOptions}
         placeholder="Select your role"
         error={errors.role}
+        customOptionLabel="Other role (specify)"
       />
     </FormField>
   );

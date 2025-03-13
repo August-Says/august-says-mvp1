@@ -1,5 +1,5 @@
 
-import { FormField, FormSelect } from '@/components/ui/FormComponents';
+import { FormField, FormSelectWithCustomOption } from '@/components/ui/FormComponents';
 import { FormData } from '@/hooks/useFormSubmission';
 import * as options from '@/constants/formOptions';
 
@@ -17,13 +17,14 @@ const AudienceSection = ({ formData, errors, onChange }: AudienceSectionProps) =
         htmlFor="targetAudience" 
         error={errors.targetAudience}
       >
-        <FormSelect
+        <FormSelectWithCustomOption
           id="targetAudience"
           value={formData.targetAudience}
           onChange={(value) => onChange('targetAudience', value)}
           options={options.audienceOptions}
           placeholder="Select audience"
           error={errors.targetAudience}
+          customOptionLabel="Other audience (specify)"
         />
       </FormField>
       
@@ -32,13 +33,14 @@ const AudienceSection = ({ formData, errors, onChange }: AudienceSectionProps) =
         htmlFor="location" 
         error={errors.location}
       >
-        <FormSelect
+        <FormSelectWithCustomOption
           id="location"
           value={formData.location}
           onChange={(value) => onChange('location', value)}
           options={options.locationOptions}
           placeholder="Select location"
           error={errors.location}
+          customOptionLabel="Other location (specify)"
         />
       </FormField>
     </>

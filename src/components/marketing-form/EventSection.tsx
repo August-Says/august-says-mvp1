@@ -1,5 +1,5 @@
 
-import { FormField, FormSelect, FormRadioGroup } from '@/components/ui/FormComponents';
+import { FormField, FormSelectWithCustomOption, FormRadioGroup } from '@/components/ui/FormComponents';
 import { FormData } from '@/hooks/useFormSubmission';
 import * as options from '@/constants/formOptions';
 
@@ -32,13 +32,14 @@ const EventSection = ({ formData, errors, onChange }: EventSectionProps) => {
           htmlFor="event" 
           error={errors.event}
         >
-          <FormSelect
+          <FormSelectWithCustomOption
             id="event"
             value={formData.event}
             onChange={(value) => onChange('event', value)}
             options={options.eventOptions}
             placeholder="Select event"
             error={errors.event}
+            customOptionLabel="Other event (specify)"
           />
         </FormField>
       )}

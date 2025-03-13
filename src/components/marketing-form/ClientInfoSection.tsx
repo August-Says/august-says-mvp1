@@ -1,5 +1,5 @@
 
-import { FormField, FormSelect, FormRadioGroup } from '@/components/ui/FormComponents';
+import { FormField, FormSelectWithCustomOption } from '@/components/ui/FormComponents';
 import { FormData } from '@/hooks/useFormSubmission';
 import * as options from '@/constants/formOptions';
 
@@ -17,13 +17,14 @@ const ClientInfoSection = ({ formData, errors, onChange }: ClientInfoSectionProp
         htmlFor="clientName" 
         error={errors.clientName}
       >
-        <FormSelect
+        <FormSelectWithCustomOption
           id="clientName"
           value={formData.clientName}
           onChange={(value) => onChange('clientName', value)}
           options={options.clientOptions}
           placeholder="Select client"
           error={errors.clientName}
+          customOptionLabel="Other client (specify)"
         />
       </FormField>
       
@@ -32,13 +33,14 @@ const ClientInfoSection = ({ formData, errors, onChange }: ClientInfoSectionProp
         htmlFor="clientIndustry" 
         error={errors.clientIndustry}
       >
-        <FormSelect
+        <FormSelectWithCustomOption
           id="clientIndustry"
           value={formData.clientIndustry}
           onChange={(value) => onChange('clientIndustry', value)}
           options={options.industryOptions}
           placeholder="Select industry"
           error={errors.clientIndustry}
+          customOptionLabel="Other industry (specify)"
         />
       </FormField>
     </>

@@ -1,5 +1,5 @@
 
-import { FormField, FormSelect } from '@/components/ui/FormComponents';
+import { FormField, FormSelectWithCustomOption } from '@/components/ui/FormComponents';
 import { FormData } from '@/hooks/useFormSubmission';
 import * as options from '@/constants/formOptions';
 
@@ -17,13 +17,14 @@ const ProductSection = ({ formData, errors, onChange }: ProductSectionProps) => 
         htmlFor="productService" 
         error={errors.productService}
       >
-        <FormSelect
+        <FormSelectWithCustomOption
           id="productService"
           value={formData.productService}
           onChange={(value) => onChange('productService', value)}
           options={options.productOptions}
           placeholder="Select product/service"
           error={errors.productService}
+          customOptionLabel="Other product/service (specify)"
         />
       </FormField>
       
@@ -32,13 +33,14 @@ const ProductSection = ({ formData, errors, onChange }: ProductSectionProps) => 
         htmlFor="relationalSentiment" 
         error={errors.relationalSentiment}
       >
-        <FormSelect
+        <FormSelectWithCustomOption
           id="relationalSentiment"
           value={formData.relationalSentiment}
           onChange={(value) => onChange('relationalSentiment', value)}
           options={options.sentimentOptions}
           placeholder="Select sentiment"
           error={errors.relationalSentiment}
+          customOptionLabel="Other sentiment (specify)"
         />
       </FormField>
     </>

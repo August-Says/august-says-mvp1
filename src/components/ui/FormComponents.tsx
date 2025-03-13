@@ -6,6 +6,7 @@ import { FormInput } from './form/FormInput';
 import { FormTextarea } from './form/FormTextarea';
 import { FormRadioGroup } from './form/FormRadioGroup';
 import { FileUpload } from './form/FileUpload';
+import { FormSelectWithCustomOption } from './form/FormSelectWithCustomOption';
 
 export { 
   FormField,
@@ -13,5 +14,6 @@ export {
   FormInput,
   FormTextarea,
   FormRadioGroup,
-  FileUpload
+  FileUpload,
+  FormSelectWithCustomOption
 };
