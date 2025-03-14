@@ -27,13 +27,13 @@ const renderMarkdownContent = (content: string) => {
           const text = line.trim().replace(/^#+\s+/, '');
           
           if (level === 1) {
-            return <h2 key={lineIndex} className="text-2xl font-bold text-white/90 mt-6 mb-4">{text}</h2>;
+            return <h2 key={lineIndex} className="text-xl font-bold text-white mt-6 mb-4">{text}</h2>;
           } else if (level === 2) {
-            return <h3 key={lineIndex} className="text-xl font-semibold text-white/90 mt-5 mb-3">{text}</h3>;
+            return <h3 key={lineIndex} className="text-lg font-semibold text-white mt-5 mb-3">{text}</h3>;
           } else if (level === 3) {
-            return <h4 key={lineIndex} className="text-lg font-medium text-white/90 mt-4 mb-2">{text}</h4>;
+            return <h4 key={lineIndex} className="text-base font-medium text-white mt-4 mb-2">{text}</h4>;
           } else {
-            return <h5 key={lineIndex} className="text-base font-medium text-white/90 mt-3 mb-2">{text}</h5>;
+            return <h5 key={lineIndex} className="text-sm font-medium text-white mt-3 mb-2">{text}</h5>;
           }
         }
         
@@ -42,7 +42,7 @@ const renderMarkdownContent = (content: string) => {
           return (
             <div key={lineIndex} className="flex items-start space-x-2 my-1 ml-4">
               <span className="text-cloudai-purple">•</span>
-              <p>{line.trim().substring(1).trim()}</p>
+              <p className="text-white/90">{line.trim().substring(1).trim()}</p>
             </div>
           );
         }
@@ -53,7 +53,7 @@ const renderMarkdownContent = (content: string) => {
           return (
             <div key={lineIndex} className="flex items-start space-x-2 my-1 ml-4">
               <span className="text-cloudai-purple min-w-[20px]">{numberedMatch[1]}.</span>
-              <p>{numberedMatch[2]}</p>
+              <p className="text-white/90">{numberedMatch[2]}</p>
             </div>
           );
         }
@@ -95,7 +95,7 @@ const renderMarkdownContent = (content: string) => {
           }
           
           return (
-            <p key={lineIndex} className="my-1">
+            <p key={lineIndex} className="my-1 text-white/90">
               {parts.map(part => {
                 if (part.type === 'bold') {
                   return <strong key={part.key} className="font-bold">{part.content}</strong>;
@@ -143,7 +143,7 @@ const renderMarkdownContent = (content: string) => {
           }
           
           return (
-            <p key={lineIndex} className="my-1">
+            <p key={lineIndex} className="my-1 text-white/90">
               {parts.map(part => {
                 if (part.type === 'italic') {
                   return <em key={part.key} className="italic">{part.content}</em>;
@@ -165,14 +165,14 @@ const renderMarkdownContent = (content: string) => {
           return (
             <div key={lineIndex} className="mt-4 mb-2">
               <strong className="text-cloudai-purple">{parts[0]}:</strong>
-              <span>{parts.slice(1).join(':')}</span>
+              <span className="text-white/90">{parts.slice(1).join(':')}</span>
             </div>
           );
         }
         
         // Handle options for questions
         if (line.trim() === 'Options:') {
-          return <div key={lineIndex} className="text-sm font-medium mt-2 mb-1">Options:</div>;
+          return <div key={lineIndex} className="text-sm font-medium mt-2 mb-1 text-white/70">Options:</div>;
         }
         
         // Handle blank lines
@@ -181,7 +181,7 @@ const renderMarkdownContent = (content: string) => {
         }
         
         // Handle everything else
-        return <p key={lineIndex} className="my-1">{line}</p>;
+        return <p key={lineIndex} className="my-1 text-white/90">{line}</p>;
       })}
     </div>
   );
@@ -189,7 +189,7 @@ const renderMarkdownContent = (content: string) => {
 
 const ContentDisplay = ({ sections, formatSectionTitle, contentRef }: ContentDisplayProps) => {
   return (
-    <div ref={contentRef} className="space-y-8 text-white/90 pdf-content">
+    <div ref={contentRef} className="space-y-8 text-white pdf-content">
       {sections.length > 0 ? (
         sections.map((section, index) => {
           const title = formatSectionTitle(section.title);

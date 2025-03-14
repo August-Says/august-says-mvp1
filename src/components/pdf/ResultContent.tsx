@@ -50,7 +50,9 @@ const ResultContent = ({
           </Button>
         </div>
       </div>
-      <ResultDisplay result={result} onBack={onBack} />
+      <div className="bg-black/20 backdrop-blur-sm rounded-xl p-6 shadow-lg max-w-4xl mx-auto">
+        <ResultDisplay result={result} onBack={onBack} />
+      </div>
     </div>
   );
 };
