@@ -1,5 +1,5 @@
 
-import { Spin, Check } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 import React from 'react';
 import { motion } from 'framer-motion';
 
@@ -63,7 +63,7 @@ const LoadingContent = ({ loadingProgress }: LoadingContentProps) => {
                   animate={{ opacity: [0.7, 1, 0.7] }}
                   transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
                 >
-                  <Spin className="w-12 h-12 text-august-purple" />
+                  <Loader2 className="w-12 h-12 text-august-purple animate-spin" />
                 </motion.div>
               </motion.div>
               
@@ -138,7 +138,7 @@ const LoadingContent = ({ loadingProgress }: LoadingContentProps) => {
                   {index === 3 ? (
                     <Check className="w-4 h-4 text-green-400" />
                   ) : (
-                    <Spin className="w-4 h-4 text-august-blue" />
+                    <Loader2 className="w-4 h-4 text-august-blue animate-spin" />
                   )}
                 </motion.div>
               </motion.div>
