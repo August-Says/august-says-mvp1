@@ -1,3 +1,4 @@
+
 import { Section } from '../types';
 import { OutputStructure } from './types';
 import { logger } from '../logger';
@@ -61,25 +62,20 @@ const processOutcomeObject = (outcome: any): Section[] => {
     logger.info("No insights array found in outcome");
   }
   
-  // Process strategic implications with bolded titles
+  // Process strategic implications without bolding
   if (outcome.strategic_implications && Array.isArray(outcome.strategic_implications)) {
     logger.info(`Processing ${outcome.strategic_implications.length} strategic implications`);
     
     const implications = outcome.strategic_implications.map((imp: string, i: number) => {
-      // Split implication if it contains a colon to bold only the first part
-      if (imp.includes(': ')) {
-        const [title, description] = imp.split(': ', 2);
-        return `${i+1}. <strong>${title}</strong>: ${description}`;
-      }
-      // Otherwise bold the entire text
-      return `${i+1}. <strong>${imp}</strong>`;
+      // No bold formatting, just numbered list
+      return `${i+1}. ${imp}`;
     }).join('\n\n');
     
     sections.push({
       title: "Strategic Implications",
       content: implications
     });
-    logger.info("Added strategic implications section with bolded titles");
+    logger.info("Added strategic implications section without bolding");
   } else {
     logger.info("No strategic_implications array found in outcome");
   }
