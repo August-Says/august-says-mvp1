@@ -6,7 +6,7 @@ import ResultDisplay from '@/components/ResultDisplay';
 import MarketingForm from '@/components/MarketingForm';
 import { useFormSubmission } from '@/hooks/useFormSubmission';
 import LoadingContent from '@/components/pdf/LoadingContent';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 const FieldsForm = () => {
   const navigate = useNavigate();
@@ -23,6 +23,28 @@ const FieldsForm = () => {
   } = useFormSubmission();
 
   const [showRawResponse, setShowRawResponse] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
+
+  // Add loading progress simulation when isLoading is true
+  useEffect(() => {
+    let progressInterval: NodeJS.Timeout;
+    
+    if (isLoading) {
+      setLoadingProgress(0);
+      progressInterval = setInterval(() => {
+        setLoadingProgress(prev => {
+          const newProgress = prev + Math.random() * 5;
+          return newProgress > 95 ? 95 : newProgress;
+        });
+      }, 800);
+    } else {
+      setLoadingProgress(100);
+    }
+    
+    return () => {
+      if (progressInterval) clearInterval(progressInterval);
+    };
+  }, [isLoading]);
 
   const handleBack = () => {
     if (result) {
@@ -32,8 +54,12 @@ const FieldsForm = () => {
     }
   };
 
+  const handleToggleRawResponse = () => {
+    setShowRawResponse(prev => !prev);
+  };
+
   if (isLoading) {
-    return <LoadingContent />;
+    return <LoadingContent loadingProgress={loadingProgress} />;
   }
   
   if (result) {
@@ -44,7 +70,7 @@ const FieldsForm = () => {
         {lastRawResponse && (
           <div className="fixed bottom-4 right-4 z-50">
             <Button 
-              onClick={() => setShowRawResponse(!showRawResponse)} 
+              onClick={handleToggleRawResponse} 
               variant="outline"
               className="bg-purple-600/80 text-white hover:bg-purple-700"
             >
@@ -56,7 +82,7 @@ const FieldsForm = () => {
                 <div className="flex justify-between items-center mb-2">
                   <h3 className="text-white text-sm font-bold">Raw Webhook Response</h3>
                   <Button 
-                    onClick={() => setShowRawResponse(false)}
+                    onClick={handleToggleRawResponse}
                     variant="ghost" 
                     className="h-6 w-6 p-0 text-white hover:bg-purple-800"
                   >
