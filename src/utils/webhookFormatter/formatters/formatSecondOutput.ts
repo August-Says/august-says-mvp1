@@ -19,12 +19,19 @@ export const formatSecondOutput = (data: any): string => {
       });
     }
     
-    // Format strategic implications
+    // Format strategic implications with bolded numbered items
     if (data.outcome.strategic_implications && Array.isArray(data.outcome.strategic_implications)) {
       formattedContent += `## Strategic Implications\n\n`;
       
       data.outcome.strategic_implications.forEach((implication: string, i: number) => {
-        formattedContent += `${i+1}. ${implication}\n\n`;
+        // Extract a title if the implication contains a colon
+        if (implication.includes(': ')) {
+          const [title, description] = implication.split(': ', 2);
+          formattedContent += `${i+1}. <strong>${title}</strong>: ${description}\n\n`;
+        } else {
+          // If no colon separator, bold the entire item
+          formattedContent += `${i+1}. <strong>${implication}</strong>\n\n`;
+        }
       });
     }
   }
