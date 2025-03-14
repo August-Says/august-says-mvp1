@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWebhookSubmission } from '@/hooks/useWebhookSubmission';
@@ -78,7 +77,7 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     fallbackGenerator: generateFallbackCanvas
   });
 
-  useProgressAnimation(isLoading);
+  const loadingProgress = useProgressAnimation(isLoading);
 
   const handleFormSubmit = async (content: string, type: 'upload' | 'text') => {
     const params: Record<string, string> = {};
@@ -107,7 +106,6 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     }
   };
 
-  // Modified to ensure we display the result as soon as we have it
   const hasValidData = () => {
     if (!lastRawResponse) return false;
     try {
@@ -120,10 +118,9 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
   };
 
   if (isLoading) {
-    return <LoadingContent />;
+    return <LoadingContent loadingProgress={loadingProgress} />;
   }
   
-  // Always prefer lastRawResponse if it contains valid data
   const shouldUseRawResponse = lastRawResponse && hasValidData();
   const displayContent = shouldUseRawResponse ? lastRawResponse : result;
   
