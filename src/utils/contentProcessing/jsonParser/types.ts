@@ -1,5 +1,5 @@
 
-import { Section } from '../types';
+import type { Section } from '../types';
 
 export interface InsightItem {
   category: string;
@@ -36,4 +36,5 @@ export type WebhookResponse = {
   output: string | OutputStructure;
 }[];
 
-export { Section };
+// Use export type when re-exporting a type with isolatedModules enabled
+export type { Section };
