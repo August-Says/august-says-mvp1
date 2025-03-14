@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWebhookSubmission } from '@/hooks/useWebhookSubmission';
@@ -106,6 +107,7 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     }
   };
 
+  // Modified to ensure we display the result as soon as we have it
   const hasValidData = () => {
     if (!lastRawResponse) return false;
     try {
@@ -121,11 +123,11 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     return <LoadingContent />;
   }
   
-  const shouldUseRawResponse = !result && lastRawResponse && hasValidData();
+  // Always prefer lastRawResponse if it contains valid data
+  const shouldUseRawResponse = lastRawResponse && hasValidData();
+  const displayContent = shouldUseRawResponse ? lastRawResponse : result;
   
-  if (result || shouldUseRawResponse) {
-    const displayContent = shouldUseRawResponse ? lastRawResponse : result;
-    
+  if (displayContent) {
     return (
       <div className="relative">
         <ResultContent
