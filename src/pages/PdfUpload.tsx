@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWebhookSubmission } from '@/hooks/useWebhookSubmission';
@@ -83,12 +84,9 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     const params: Record<string, string> = {};
     setTextContent(content);
     
-    if (type === 'text') {
-      await callWebhook(params, 'textContent', content);
-    } else {
-      params.pdfUploaded = 'true';
-      await callWebhook(params);
-    }
+    // Always send the content as textContent to the webhook
+    // This ensures PDF text is properly processed
+    await callWebhook(params, 'textContent', content);
   };
 
   const handleHistoryNavigation = (direction: 'back' | 'forward') => {

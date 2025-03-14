@@ -17,19 +17,27 @@ interface PdfUploadFormProps {
 const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps) => {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [textContent, setTextContent] = useState(initialTextContent);
+  const [extractedPdfText, setExtractedPdfText] = useState('');
   const [additionalNotes, setAdditionalNotes] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [activeTab, setActiveTab] = useState<'upload' | 'text'>('upload');
 
-  const validateForm = (activeTab: 'upload' | 'text') => {
+  const validateForm = (tabType: 'upload' | 'text') => {
     const newErrors: Record<string, string> = {};
     let isValid = true;
     
-    if (activeTab === 'upload' && !pdfFile) {
-      newErrors.file = 'Please upload a PDF file';
-      isValid = false;
+    if (tabType === 'upload') {
+      if (!pdfFile) {
+        newErrors.file = 'Please upload a PDF file';
+        isValid = false;
+      } else if (!extractedPdfText) {
+        // We have a file but no extracted text
+        toast.warning('No text could be extracted from the PDF. The submission may not be as useful.');
+        // Continue anyway since we have a file
+      }
     }
     
-    if (activeTab === 'text' && !textContent.trim()) {
+    if (tabType === 'text' && !textContent.trim()) {
       newErrors.text = 'Please enter some text content';
       isValid = false;
     }
@@ -38,30 +46,52 @@ const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps
     return isValid;
   };
 
-  const handleSubmit = (e: React.FormEvent, activeTab: 'upload' | 'text') => {
+  const handleFileChange = (file: File | null, extractedText?: string) => {
+    setPdfFile(file);
+    if (extractedText) {
+      setExtractedPdfText(extractedText);
+    } else if (!file) {
+      setExtractedPdfText('');
+    }
+  };
+
+  const handleSubmit = (e: React.FormEvent, tabType: 'upload' | 'text') => {
     e.preventDefault();
     
-    if (!validateForm(activeTab)) {
-      toast.error(`Please ${activeTab === 'upload' ? 'upload a PDF file' : 'enter some text content'}`);
+    if (!validateForm(tabType)) {
+      toast.error(`Please ${tabType === 'upload' ? 'upload a PDF file' : 'enter some text content'}`);
       return;
     }
     
-    if (activeTab === 'text') {
+    if (tabType === 'text') {
       const contentWithNotes = additionalNotes.trim() 
         ? `${textContent}\n\nADDITIONAL NOTES:\n${additionalNotes}`
         : textContent;
       onSubmit(contentWithNotes, 'text');
     } else {
-      const fileNameWithNotes = additionalNotes.trim()
-        ? `${pdfFile?.name || 'Uploaded PDF'}\n\nADDITIONAL NOTES:\n${additionalNotes}`
-        : pdfFile?.name || 'Uploaded PDF';
-      onSubmit(fileNameWithNotes, 'upload');
+      // For upload type, use the extracted text if available
+      if (extractedPdfText) {
+        const contentWithNotes = additionalNotes.trim() 
+          ? `${extractedPdfText}\n\nADDITIONAL NOTES:\n${additionalNotes}`
+          : extractedPdfText;
+        onSubmit(contentWithNotes, 'text'); // Send as text type since we have the content
+      } else {
+        // Fall back to just sending the file name if no text was extracted
+        const fileNameWithNotes = additionalNotes.trim()
+          ? `${pdfFile?.name || 'Uploaded PDF'}\n\nADDITIONAL NOTES:\n${additionalNotes}`
+          : pdfFile?.name || 'Uploaded PDF';
+        onSubmit(fileNameWithNotes, 'upload');
+      }
     }
   };
 
   return (
     <div className="glass-morphism rounded-2xl p-6 sm:p-8 shadow-lg">
-      <Tabs defaultValue="upload" className="w-full">
+      <Tabs 
+        defaultValue="upload" 
+        className="w-full"
+        onValueChange={(value) => setActiveTab(value as 'upload' | 'text')}
+      >
         <TabsList className="grid w-full grid-cols-2 bg-white/10 text-white">
           <TabsTrigger 
             value="upload" 
@@ -86,10 +116,26 @@ const PdfUploadForm = ({ onSubmit, initialTextContent = '' }: PdfUploadFormProps
             >
               <FileUpload
                 id="pdfFile"
-                onFileChange={setPdfFile}
+                onFileChange={handleFileChange}
                 error={errors.file}
               />
             </FormField>
+            
+            {extractedPdfText && (
+              <FormField
+                label="Extracted PDF Text (Editable)"
+                htmlFor="extractedText"
+                className="mt-6"
+              >
+                <FormTextarea
+                  id="extractedText"
+                  value={extractedPdfText}
+                  onChange={(e) => setExtractedPdfText(e.target.value)}
+                  placeholder="Extracted text from PDF..."
+                  rows={6}
+                />
+              </FormField>
+            )}
             
             <FormField
               label="Additional Notes"
