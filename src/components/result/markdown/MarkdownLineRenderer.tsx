@@ -34,6 +34,20 @@ export const MarkdownLineRenderer: React.FC<MarkdownLineRendererProps> = ({ line
   // Handle numbered lists
   const numberedMatch = line.trim().match(/^(\d+)\.\s(.+)$/);
   if (numberedMatch) {
+    // Check if this line has <strong> tags and parse them correctly
+    if (numberedMatch[2].includes('<strong>') && numberedMatch[2].includes('</strong>')) {
+      const contentWithTags = numberedMatch[2];
+      const parts = parseFormattedText(contentWithTags, lineIndex, /<strong>([^<]+)<\/strong>/g, 'bold');
+      return (
+        <div key={lineIndex} className="flex items-start space-x-2 my-1 ml-4">
+          <span className="text-white min-w-[20px]">{numberedMatch[1]}.</span>
+          <div className="text-white/90">
+            <BoldFormattedText parts={parts} lineIndex={lineIndex} />
+          </div>
+        </div>
+      );
+    }
+    
     return <NumberedItem number={numberedMatch[1]} content={numberedMatch[2]} lineIndex={lineIndex} />;
   }
   

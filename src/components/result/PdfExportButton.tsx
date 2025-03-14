@@ -61,6 +61,16 @@ const PdfExportButton = ({ contentRef }: PdfExportButtonProps) => {
       (heading as HTMLElement).style.marginBottom = '10px';
     });
     
+    // Clean up any <strong> tags that might be visible in the PDF
+    const strongTags = element.querySelectorAll('*');
+    strongTags.forEach(el => {
+      // Replace any inner HTML that has <strong> tags with properly styled elements
+      if ((el as HTMLElement).innerHTML.includes('<strong>')) {
+        (el as HTMLElement).innerHTML = (el as HTMLElement).innerHTML
+          .replace(/<strong>([^<]+)<\/strong>/g, '<span style="font-weight: bold;">$1</span>');
+      }
+    });
+    
     const opt = {
       margin: [10, 10, 10, 10],
       filename: 'marketing-canvas.pdf',

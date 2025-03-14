@@ -45,7 +45,7 @@ export const parseFormattedText = (
   let match;
   
   // Handle HTML-like tags for bold text (like <strong>text</strong>)
-  if (type === 'bold' && pattern.toString().includes('strong')) {
+  if (type === 'bold' && line.includes('<strong>')) {
     const strongRegex = /<strong>([^<]+)<\/strong>/g;
     while ((match = strongRegex.exec(line)) !== null) {
       // Add text before the match
@@ -66,27 +66,38 @@ export const parseFormattedText = (
       
       lastIndex = match.index + match[0].length;
     }
-  } else {
-    // Handle regular Markdown syntax (** or *)
-    while ((match = pattern.exec(line)) !== null) {
-      // Add text before the match
-      if (match.index > lastIndex) {
-        parts.push({
-          type: 'text',
-          content: line.substring(lastIndex, match.index),
-          key: `${lineIndex}-text-${lastIndex}`
-        });
-      }
-      
-      // Add the formatted text
+    
+    // Add any remaining text
+    if (lastIndex < line.length) {
       parts.push({
-        type,
-        content: match[1],
-        key: `${lineIndex}-${type}-${match.index}`
+        type: 'text',
+        content: line.substring(lastIndex),
+        key: `${lineIndex}-text-${lastIndex}`
       });
-      
-      lastIndex = match.index + match[0].length;
     }
+    
+    return parts;
+  }
+  
+  // Handle regular Markdown syntax (** or *)
+  while ((match = pattern.exec(line)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      parts.push({
+        type: 'text',
+        content: line.substring(lastIndex, match.index),
+        key: `${lineIndex}-text-${lastIndex}`
+      });
+    }
+    
+    // Add the formatted text
+    parts.push({
+      type,
+      content: match[1],
+      key: `${lineIndex}-${type}-${match.index}`
+    });
+    
+    lastIndex = match.index + match[0].length;
   }
   
   // Add any remaining text
