@@ -33,7 +33,7 @@ export const NumberedItem = ({
   lineIndex: number 
 }) => (
   <div key={lineIndex} className="flex items-start space-x-2 my-1 ml-4">
-    <span className="text-cloudai-purple min-w-[20px]">{number}.</span>
+    <span className="text-white min-w-[20px]">{number}.</span>
     <p className="text-white/90">{content}</p>
   </div>
 );
