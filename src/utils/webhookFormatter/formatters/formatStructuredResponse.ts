@@ -74,12 +74,12 @@ export const formatStructuredResponse = (data: any): string => {
       }
     }
     
-    // Format Activation Add-ons
+    // Format Activation Add-ons with bolded strategy names
     if (data.activation_add_ons && Array.isArray(data.activation_add_ons)) {
       formattedContent += `## Activation Add-ons\n\n`;
       
       data.activation_add_ons.forEach((addon: any, i: number) => {
-        formattedContent += `### ${i+1}. ${addon.strategy}\n\n`;
+        formattedContent += `${i+1}. <strong>${addon.strategy}</strong>\n\n`;
         if (addon.details) {
           formattedContent += `**Execution Plan**: ${addon.details}\n\n`;
         }

@@ -12,7 +12,8 @@ export const formatFourthOutput = (data: any): string => {
     formattedContent += `## Activation Add-ons\n\n`;
     
     data.activation_add_ons.forEach((addon: any, i: number) => {
-      formattedContent += `### ${i+1}. ${addon.strategy}\n\n`;
+      // Bold the strategy name in the numbered list using <strong> tags for proper rendering
+      formattedContent += `${i+1}. <strong>${addon.strategy}</strong>\n\n`;
       if (addon.details) {
         formattedContent += `**Execution Plan**: ${addon.details}\n\n`;
       }

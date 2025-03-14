@@ -49,7 +49,8 @@ const processActivationAddons = (addons: any[]): Section[] => {
     logger.info(`Processing ${addons.length} activation add-ons`);
     let addonsContent = '';
     addons.forEach((addon: any, i: number) => {
-      addonsContent += `${i+1}. ${addon.strategy}\n\n`;
+      // Bold the strategy name using <strong> tags for proper rendering
+      addonsContent += `${i+1}. <strong>${addon.strategy}</strong>\n\n`;
       if (addon.details) {
         addonsContent += `Execution Plan: ${addon.details}\n\n`;
       }
@@ -62,7 +63,7 @@ const processActivationAddons = (addons: any[]): Section[] => {
       title: "Activation Add-ons",
       content: addonsContent
     });
-    logger.info("Added activation add-ons section");
+    logger.info("Added activation add-ons section with bolded strategy names");
   } else {
     logger.info("activation_add_ons is not an array");
   }

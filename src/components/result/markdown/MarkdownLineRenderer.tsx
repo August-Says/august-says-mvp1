@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   MarkdownHeading,
@@ -31,7 +30,7 @@ export const MarkdownLineRenderer: React.FC<MarkdownLineRendererProps> = ({ line
     return <BulletPoint content={content} lineIndex={lineIndex} />;
   }
   
-  // Handle numbered lists
+  // Handle numbered lists with bold text (Activation Add-ons)
   const numberedMatch = line.trim().match(/^(\d+)\.\s(.+)$/);
   if (numberedMatch) {
     // Check if this line has <strong> tags and parse them correctly
