@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { WebhookOptions, WebhookSubmissionResult } from '@/types/webhook';
-import { formatWebhookResponse } from '@/utils/webhookResponseFormatter';
+import { formatWebhookResponse } from '@/utils/webhookFormatter';
 import { defaultFallbackGenerator } from '@/utils/fallbackContentGenerator';
 import { useSubmissionHistory } from '@/hooks/useSubmissionHistory';
 import { executeWebhookRequest } from '@/utils/webhookRequestHandler';
