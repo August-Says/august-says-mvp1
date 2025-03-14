@@ -51,7 +51,7 @@ const Layout = ({ children }: LayoutProps) => {
   }, [isAuthenticated, location.pathname, navigate, isLoading]);
 
   const openSupportChat = () => {
-    // Update to production webhook URL
+    // Production webhook URL
     window.open('https://sonarai.app.n8n.cloud/webhook/715d27f7-f730-437c-8abe-cda82e04210e/chat', '_blank');
     toast.success("Support chat opened in a new window!");
   };
