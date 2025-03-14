@@ -55,12 +55,12 @@ export const formatStructuredResponse = (data: any): string => {
     
     // Format Outcome section
     if (data.outcome) {
-      // Format insights as numbered list (like strategic implications)
+      // Format insights using HTML-like markup for bold text
       if (data.outcome.insights && Array.isArray(data.outcome.insights)) {
         formattedContent += `## Key Insights\n\n`;
         
         data.outcome.insights.forEach((insight: any, i: number) => {
-          formattedContent += `${i+1}. **${insight.category}**: ${insight.description}\n\n`;
+          formattedContent += `${i+1}. <strong>${insight.category}</strong>: ${insight.description}\n\n`;
         });
       }
       

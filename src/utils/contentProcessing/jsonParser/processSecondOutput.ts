@@ -50,7 +50,7 @@ const processOutcomeObject = (outcome: any): Section[] => {
     logger.info(`Processing ${outcome.insights.length} insights`);
     
     const insights = outcome.insights.map(
-      (insight: any, i: number) => `${i+1}. **${insight.category}**: ${insight.description}`
+      (insight: any, i: number) => `${i+1}. <strong>${insight.category}</strong>: ${insight.description}`
     ).join('\n\n');
     
     sections.push({

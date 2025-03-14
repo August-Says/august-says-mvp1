@@ -14,7 +14,8 @@ export const formatSecondOutput = (data: any): string => {
       formattedContent += `## Key Insights\n\n`;
       
       data.outcome.insights.forEach((insight: any, i: number) => {
-        formattedContent += `${i+1}. **${insight.category}**: ${insight.description}\n\n`;
+        // Properly format with HTML-like markup to be parsed later by the markdown renderer
+        formattedContent += `${i+1}. <strong>${insight.category}</strong>: ${insight.description}\n\n`;
       });
     }
     

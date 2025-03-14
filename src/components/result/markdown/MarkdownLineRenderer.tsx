@@ -37,7 +37,13 @@ export const MarkdownLineRenderer: React.FC<MarkdownLineRendererProps> = ({ line
     return <NumberedItem number={numberedMatch[1]} content={numberedMatch[2]} lineIndex={lineIndex} />;
   }
   
-  // Handle bold text
+  // Handle HTML-like <strong> tags
+  if (line.includes('<strong>') && line.includes('</strong>')) {
+    const parts = parseFormattedText(line, lineIndex, /<strong>([^<]+)<\/strong>/g, 'bold');
+    return <BoldFormattedText parts={parts} lineIndex={lineIndex} />;
+  }
+  
+  // Handle bold text with ** (fallback)
   if (line.includes('**') && line.match(/\*\*([^*]+)\*\*/)) {
     const parts = parseFormattedText(line, lineIndex, /\*\*([^*]+)\*\*/g, 'bold');
     return <BoldFormattedText parts={parts} lineIndex={lineIndex} />;

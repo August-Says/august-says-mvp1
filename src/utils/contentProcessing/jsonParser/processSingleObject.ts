@@ -80,11 +80,11 @@ export const extractSectionsFromSingleObject = (data: any): Section[] => {
   
   // Process Outcome section
   if (data.outcome) {
-    // Process insights - now as numbered list like implications
+    // Process insights with HTML-like markup for bold text
     if (data.outcome.insights && Array.isArray(data.outcome.insights)) {
       console.log(`Processing ${data.outcome.insights.length} insights`);
       const insights = data.outcome.insights.map(
-        (insight: any, i: number) => `${i+1}. **${insight.category}**: ${insight.description}`
+        (insight: any, i: number) => `${i+1}. <strong>${insight.category}</strong>: ${insight.description}`
       ).join('\n\n');
       
       sections.push({
