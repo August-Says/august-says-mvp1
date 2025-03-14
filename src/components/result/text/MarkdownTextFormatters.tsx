@@ -47,7 +47,7 @@ export const QuestionItem = ({
   lineIndex: number 
 }) => (
   <div key={lineIndex} className="mt-4 mb-2">
-    <strong className="text-cloudai-purple">{parts[0]}:</strong>
+    <strong className="text-white">{parts[0]}:</strong>
     <span className="text-white/90">{parts.slice(1).join(':')}</span>
   </div>
 );
