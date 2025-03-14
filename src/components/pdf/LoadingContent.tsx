@@ -1,13 +1,32 @@
 
 import { Loader2, Check } from 'lucide-react';
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Progress } from '@/components/ui/progress';
 
 interface LoadingContentProps {
-  loadingProgress?: number; // Keep for backward compatibility
+  loadingProgress?: number;
 }
 
-const LoadingContent = ({ loadingProgress }: LoadingContentProps) => {
+const LoadingContent = ({ loadingProgress = 0 }: LoadingContentProps) => {
+  const [seconds, setSeconds] = useState(0);
+  
+  // Timer for seconds counter
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setSeconds(prev => prev + 1);
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+  
+  // Format seconds into mm:ss
+  const formatTime = (totalSeconds: number) => {
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  };
+
   return (
     <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8 animate-fade-in">
       <div className="w-full max-w-4xl mx-auto glass-morphism rounded-xl p-8 shadow-lg shadow-blue-500/20">
@@ -92,8 +111,20 @@ const LoadingContent = ({ loadingProgress }: LoadingContentProps) => {
             </motion.div>
           </div>
           
+          {/* Time counter and progress bar */}
+          <div className="w-full max-w-sm mx-auto mb-6">
+            <div className="flex justify-between items-center mb-1">
+              <span className="text-white/90 text-sm font-medium">Progress</span>
+              <span className="text-white/90 text-sm font-medium">{Math.round(loadingProgress)}%</span>
+            </div>
+            <Progress value={loadingProgress} className="h-2 bg-white/10" />
+            <div className="mt-2 text-center">
+              <span className="text-white/70 text-sm">Time elapsed: {formatTime(seconds)}</span>
+            </div>
+          </div>
+          
           <motion.div 
-            className="text-white/90 text-xl font-medium mt-8 text-center"
+            className="text-white/90 text-xl font-medium mt-4 text-center"
             animate={{ opacity: [0.7, 1, 0.7] }}
             transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
           >
