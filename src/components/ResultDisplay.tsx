@@ -28,7 +28,7 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 md:mb-0">Your Marketing Canvas</h2>
         <div className="flex space-x-4">
           <PdfExportButton contentRef={contentRef} />
-          <ShareButton />
+          <ShareButton contentRef={contentRef} />
         </div>
       </div>
       
