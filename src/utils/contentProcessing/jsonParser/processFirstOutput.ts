@@ -1,20 +1,21 @@
 
 import { Section } from '../types';
 import { OutputStructure } from './types';
+import { logger } from '../logger';
 
 /**
  * Process the first output object (summary and objective)
  */
 export const processFirstOutput = (output: string | OutputStructure): Section[] => {
   const sections: Section[] = [];
-  console.log("Processing first output object:", typeof output);
+  logger.info("Processing first output object:", typeof output);
   
   // Handle string output (markdown)
   if (typeof output === 'string') {
     try {
       // Try to parse as JSON if it's a stringified JSON
       const parsedOutput = JSON.parse(output);
-      console.log("Successfully parsed string output as JSON");
+      logger.info("Successfully parsed string output as JSON");
       
       // Process as object
       if (parsedOutput.summary) {
@@ -22,7 +23,7 @@ export const processFirstOutput = (output: string | OutputStructure): Section[] 
           title: "Summary",
           content: parsedOutput.summary
         });
-        console.log("Added summary section from parsed JSON string");
+        logger.info("Added summary section from parsed JSON string");
       }
       
       if (parsedOutput.objective) {
@@ -30,7 +31,7 @@ export const processFirstOutput = (output: string | OutputStructure): Section[] 
           title: "Objective",
           content: parsedOutput.objective
         });
-        console.log("Added objective section from parsed JSON string");
+        logger.info("Added objective section from parsed JSON string");
       }
     } catch (e) {
       // If it's just markdown, add as a section
@@ -38,7 +39,7 @@ export const processFirstOutput = (output: string | OutputStructure): Section[] 
         title: "Summary",
         content: output
       });
-      console.log("Added summary section from string output");
+      logger.info("Added summary section from string output");
     }
   } else if (output && typeof output === 'object') {
     // If we have summary in the output
@@ -47,7 +48,7 @@ export const processFirstOutput = (output: string | OutputStructure): Section[] 
         title: "Summary",
         content: output.summary
       });
-      console.log("Added summary section from JSON output");
+      logger.info("Added summary section from JSON output");
     }
     
     // If we have objective in the output
@@ -56,7 +57,7 @@ export const processFirstOutput = (output: string | OutputStructure): Section[] 
         title: "Objective",
         content: output.objective
       });
-      console.log("Added objective section from JSON output");
+      logger.info("Added objective section from JSON output");
     }
   }
   

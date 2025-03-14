@@ -7,7 +7,7 @@ import LoadingContent from '@/components/pdf/LoadingContent';
 import ResultContent from '@/components/pdf/ResultContent';
 import UploadFormContent from '@/components/pdf/UploadFormContent';
 import { Button } from '@/components/ui/button';
-import { processContent } from '@/components/result/ContentParser';
+import { processContent } from '@/utils/contentProcessing';
 
 const PdfUpload = () => {
   const navigate = useNavigate();

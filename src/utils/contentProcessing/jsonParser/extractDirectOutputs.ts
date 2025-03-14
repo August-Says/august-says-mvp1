@@ -1,6 +1,7 @@
 
 import { Section } from '../types';
 import { WebhookResponse } from './types';
+import { logger } from '../logger';
 
 /**
  * Extract sections directly from webhook outputs when structured approach fails
@@ -8,7 +9,7 @@ import { WebhookResponse } from './types';
 export const extractDirectOutputs = (data: WebhookResponse): Section[] => {
   const sections: Section[] = [];
   
-  console.log("No sections extracted via structured approach, trying direct output processing");
+  logger.info("No sections extracted via structured approach, trying direct output processing");
   
   for (let i = 0; i < data.length; i++) {
     if (data[i] && data[i].output) {
@@ -18,14 +19,14 @@ export const extractDirectOutputs = (data: WebhookResponse): Section[] => {
           title: `Output ${i+1}`,
           content: output.trim()
         });
-        console.log(`Added Output ${i+1} as a direct section`);
+        logger.info(`Added Output ${i+1} as a direct section`);
       } else if (typeof output === 'object') {
         const content = JSON.stringify(output, null, 2);
         sections.push({
           title: `Output ${i+1}`,
           content: content
         });
-        console.log(`Added Output ${i+1} as a JSON-stringified section`);
+        logger.info(`Added Output ${i+1} as a JSON-stringified section`);
       }
     }
   }

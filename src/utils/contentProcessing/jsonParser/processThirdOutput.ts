@@ -1,19 +1,20 @@
 
 import { Section } from '../types';
 import { OutputStructure } from './types';
+import { logger } from '../logger';
 
 /**
  * Process the third output object (canvass with definition, format and questions)
  */
 export const processThirdOutput = (output: string | OutputStructure): Section[] => {
   const sections: Section[] = [];
-  console.log("Processing third output object:", typeof output);
+  logger.info("Processing third output object:", typeof output);
   
   // Handle string output (markdown)
   if (typeof output === 'string') {
     try {
       const parsedOutput = JSON.parse(output);
-      console.log("Successfully parsed string output as JSON");
+      logger.info("Successfully parsed string output as JSON");
       
       // Process structured object
       if (parsedOutput.canvass) {
@@ -24,14 +25,14 @@ export const processThirdOutput = (output: string | OutputStructure): Section[] 
         title: "Canvass Information",
         content: output
       });
-      console.log("Added canvass information from string output");
+      logger.info("Added canvass information from string output");
     }
   } else if (output && typeof output === 'object') {
     // Process structured canvass object
     if (output.canvass) {
       return processCanvassObject(output.canvass);
     } else {
-      console.log("No canvass object found in third output");
+      logger.info("No canvass object found in third output");
     }
   }
   
@@ -50,7 +51,7 @@ const processCanvassObject = (canvass: any): Section[] => {
       title: "What is a Canvass",
       content: canvass.definition
     });
-    console.log("Added canvass definition section");
+    logger.info("Added canvass definition section");
   }
   
   // Process recommended format
@@ -59,12 +60,12 @@ const processCanvassObject = (canvass: any): Section[] => {
       title: "Recommended Canvass Format",
       content: canvass.recommended_format
     });
-    console.log("Added recommended canvass format section");
+    logger.info("Added recommended canvass format section");
   }
   
   // Process questions
   if (canvass.questions && Array.isArray(canvass.questions)) {
-    console.log(`Processing ${canvass.questions.length} canvass questions`);
+    logger.info(`Processing ${canvass.questions.length} canvass questions`);
     let questionsContent = '';
     canvass.questions.forEach((q: any, i: number) => {
       questionsContent += `Question ${i+1}: ${q.question}\n\nOptions:\n`;
@@ -80,9 +81,9 @@ const processCanvassObject = (canvass: any): Section[] => {
       title: "Questions",
       content: questionsContent
     });
-    console.log("Added questions section");
+    logger.info("Added questions section");
   } else {
-    console.log("No questions array found in canvass");
+    logger.info("No questions array found in canvass");
   }
   
   return sections;
