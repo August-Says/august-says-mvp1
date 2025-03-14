@@ -30,6 +30,20 @@ export interface OutputStructure {
     questions?: QuestionItem[];
   };
   activation_add_ons?: ActivationAddon[];
+  properties?: {
+    summary?: string;
+    objective?: string;
+    outcome?: {
+      insights?: InsightItem[];
+      strategic_implications?: string[];
+    };
+    canvass?: {
+      definition?: string;
+      recommended_format?: string;
+      questions?: QuestionItem[];
+    };
+    activation_add_ons?: ActivationAddon[];
+  };
 }
 
 export type WebhookResponse = {
