@@ -45,18 +45,19 @@ export const processSecondOutput = (output: string | OutputStructure): Section[]
 const processOutcomeObject = (outcome: any): Section[] => {
   const sections: Section[] = [];
   
-  // Process insights
+  // Process insights - now formatted as numbered list like implications
   if (outcome.insights && Array.isArray(outcome.insights)) {
     logger.info(`Processing ${outcome.insights.length} insights`);
-    outcome.insights.forEach((insight: any) => {
-      if (insight.category && insight.description) {
-        sections.push({
-          title: insight.category,
-          content: insight.description
-        });
-        logger.info(`Added insight section: ${insight.category}`);
-      }
+    
+    const insights = outcome.insights.map(
+      (insight: any, i: number) => `${i+1}. **${insight.category}**: ${insight.description}`
+    ).join('\n\n');
+    
+    sections.push({
+      title: "Key Insights",
+      content: insights
     });
+    logger.info("Added insights section as numbered list");
   } else {
     logger.info("No insights array found in outcome");
   }

@@ -80,16 +80,18 @@ export const extractSectionsFromSingleObject = (data: any): Section[] => {
   
   // Process Outcome section
   if (data.outcome) {
-    // Process insights
+    // Process insights - now as numbered list like implications
     if (data.outcome.insights && Array.isArray(data.outcome.insights)) {
       console.log(`Processing ${data.outcome.insights.length} insights`);
-      data.outcome.insights.forEach((insight: any) => {
-        sections.push({
-          title: insight.category,
-          content: insight.description
-        });
-        console.log(`Added insight section: ${insight.category}`);
+      const insights = data.outcome.insights.map(
+        (insight: any, i: number) => `${i+1}. **${insight.category}**: ${insight.description}`
+      ).join('\n\n');
+      
+      sections.push({
+        title: "Key Insights",
+        content: insights
       });
+      console.log("Added insights section as numbered list");
     }
     
     // Process strategic implications
