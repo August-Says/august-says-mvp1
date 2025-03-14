@@ -1,19 +1,49 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { HelpCircle, User, ChevronDown, Menu, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { signOut } from '@/services/authService';
+import { supabase } from '@/integrations/supabase/client';
 
 const Navbar = () => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    // In a real app, we would clear the auth token/session
-    localStorage.removeItem('isAuthenticated');
+  useEffect(() => {
+    // Set up the auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (session) {
+          setUser(session.user);
+        } else {
+          setUser(null);
+        }
+      }
+    );
+
+    // Get the current user
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    
+    getUser();
+
+    // Clean up subscription on unmount
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    await signOut();
     navigate('/login');
   };
+
+  const userName = user?.email?.split('@')[0] || 'User';
 
   return (
     <nav className="w-full backdrop-blur-md bg-white/5 border-b border-white/10 fixed top-0 z-50">
@@ -50,7 +80,7 @@ const Navbar = () => {
                 onClick={() => setIsProfileOpen(!isProfileOpen)}
               >
                 <User size={20} className="mr-2" />
-                <span>Claire</span>
+                <span>{userName}</span>
                 <ChevronDown size={16} className="ml-2" />
               </Button>
               {isProfileOpen && (
@@ -97,7 +127,7 @@ const Navbar = () => {
                   <div className="mt-auto border-t border-white/10 py-4">
                     <div className="flex items-center px-3 py-2">
                       <User size={20} className="text-white/80 mr-3" />
-                      <span className="text-white/90 font-medium">Claire</span>
+                      <span className="text-white/90 font-medium">{userName}</span>
                     </div>
                     <button
                       onClick={handleLogout}

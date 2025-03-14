@@ -6,6 +6,7 @@ import Footer from './Footer';
 import { MessageCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -15,17 +16,39 @@ const Layout = ({ children }: LayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Check if user is authenticated
-    const authStatus = localStorage.getItem('isAuthenticated');
-    setIsAuthenticated(authStatus === 'true');
+    // Check if user is authenticated with Supabase
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAuthenticated(!!session);
+      setIsLoading(false);
+    };
 
+    checkAuth();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      setIsAuthenticated(!!session);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
     // If not authenticated and not on login page, redirect to login
-    if (!authStatus && location.pathname !== '/login') {
+    if (!isLoading && !isAuthenticated && location.pathname !== '/login') {
       navigate('/login');
     }
-  }, [location.pathname, navigate]);
+
+    // If authenticated and on login page, redirect to home
+    if (!isLoading && isAuthenticated && location.pathname === '/login') {
+      navigate('/');
+    }
+  }, [isAuthenticated, location.pathname, navigate, isLoading]);
 
   const openSupportChat = () => {
     // Update to production webhook URL

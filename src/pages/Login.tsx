@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -5,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { Eye, EyeOff } from 'lucide-react';
-import { handleAsyncOperation } from '@/utils/errorHandler';
+import { signIn } from '@/services/authService';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -43,23 +44,12 @@ const Login = () => {
     
     setIsLoading(true);
     
-    const result = await handleAsyncOperation(async () => {
-      // Mock authentication delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Check if credentials match mock account
-      if (email === 'claire@augustsays.com' && password === 'password') {
-        localStorage.setItem('isAuthenticated', 'true');
-        toast.success('Successfully logged in!');
-        navigate('/');
-        return true;
-      } else {
-        throw new Error('Invalid email or password');
-      }
-    }, {
-      defaultErrorMessage: 'An error occurred during login',
-      showToast: true
-    });
+    const { user, error } = await signIn({ email, password });
+    
+    if (user) {
+      toast.success('Successfully logged in!');
+      navigate('/');
+    }
     
     setIsLoading(false);
   };
