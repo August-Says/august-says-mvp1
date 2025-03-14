@@ -5,6 +5,7 @@ import { useWebhookSubmission } from './useWebhookSubmission';
 import { validateFormData } from '@/utils/formValidation';
 import { generateMarketingCanvas } from '@/utils/canvasGenerator';
 import { FormData, FORM_DATA_STORAGE_KEY } from '@/types/form';
+import { processContent } from '@/utils/contentProcessing';
 
 export type { FormData } from '@/types/form';
 export { FORM_DATA_STORAGE_KEY } from '@/types/form';
@@ -30,7 +31,13 @@ export const useFormSubmission = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Use the shared webhook submission hook with a custom fallback generator
-  const { isLoading, result, setResult, callWebhook } = useWebhookSubmission({
+  const { 
+    isLoading, 
+    result, 
+    setResult, 
+    callWebhook, 
+    lastRawResponse 
+  } = useWebhookSubmission({
     fallbackGenerator: (data: string) => generateMarketingCanvas(data, formData)
   });
 
@@ -98,14 +105,33 @@ export const useFormSubmission = () => {
     await callWebhook(params);
   };
 
+  // Helper function to check if raw response data is valid
+  const hasValidData = () => {
+    if (!lastRawResponse) return false;
+    try {
+      const sections = processContent(lastRawResponse);
+      return sections.length > 0;
+    } catch (e) {
+      console.error("Error processing content:", e);
+      return false;
+    }
+  };
+
+  // Get the best display content based on available data
+  const getDisplayContent = () => {
+    const shouldUseRawResponse = lastRawResponse && hasValidData();
+    return shouldUseRawResponse ? lastRawResponse : result;
+  };
+
   return {
     formData,
     isLoading,
-    result,
+    result: getDisplayContent(),
     errors,
     handleChange,
     handleSubmit,
     resetForm,
-    setResult
+    setResult,
+    lastRawResponse
   };
 };
