@@ -8,6 +8,7 @@ import ResultContent from '@/components/pdf/ResultContent';
 import UploadFormContent from '@/components/pdf/UploadFormContent';
 import { Button } from '@/components/ui/button';
 import { processContent } from '@/utils/contentProcessing';
+import { toast } from 'sonner';
 
 const PdfUpload = () => {
   const navigate = useNavigate();
@@ -81,11 +82,15 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
   const loadingProgress = useProgressAnimation(isLoading);
 
   const handleFormSubmit = async (content: string, type: 'upload' | 'text') => {
+    if (!content.trim()) {
+      toast.error('No content to process. Please upload a PDF or enter text.');
+      return;
+    }
+    
     const params: Record<string, string> = {};
     setTextContent(content);
     
     // Always send the content as textContent to the webhook
-    // This ensures PDF text is properly processed
     await callWebhook(params, 'textContent', content);
   };
 

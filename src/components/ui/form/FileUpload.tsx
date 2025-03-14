@@ -4,8 +4,16 @@ import { cn } from '@/lib/utils';
 import * as pdfjs from 'pdfjs-dist';
 import { toast } from 'sonner';
 
-// Initialize PDF.js worker
-pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.min.js`;
+// Import the worker directly instead of using CDN
+import * as pdfjsWorker from 'pdfjs-dist/build/pdf.worker.mjs';
+
+// Set up the worker
+if (typeof window !== 'undefined' && !pdfjs.GlobalWorkerOptions.workerPort) {
+  pdfjs.GlobalWorkerOptions.workerPort = new Worker(
+    new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url),
+    { type: 'module' }
+  );
+}
 
 interface FileUploadProps {
   id: string;
