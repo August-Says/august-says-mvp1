@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { signIn } from '@/services/authService';
 
 const Login = () => {
@@ -15,6 +15,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({ email: '', password: '' });
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
 
   const validateForm = () => {
     let isValid = true;
@@ -43,10 +44,13 @@ const Login = () => {
     if (!validateForm()) return;
     
     setIsLoading(true);
+    setEmailNotConfirmed(false);
     
-    const { user, error } = await signIn({ email, password });
+    const { user, error, emailNotConfirmed: notConfirmed } = await signIn({ email, password });
     
-    if (user) {
+    if (notConfirmed) {
+      setEmailNotConfirmed(true);
+    } else if (user) {
       toast.success('Successfully logged in!');
       navigate('/');
     }
@@ -61,6 +65,15 @@ const Login = () => {
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
           <p className="text-white/80">Sign in to your August Says account</p>
         </div>
+        
+        {emailNotConfirmed && (
+          <div className="mb-6 p-3 bg-amber-500/20 border border-amber-500/40 rounded-lg flex items-start">
+            <AlertCircle className="text-amber-500 mr-2 mt-0.5 flex-shrink-0" size={18} />
+            <p className="text-amber-100 text-sm">
+              Your email hasn't been confirmed yet. Please check your inbox for a confirmation email or contact your administrator.
+            </p>
+          </div>
+        )}
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">

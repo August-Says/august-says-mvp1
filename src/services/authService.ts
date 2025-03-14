@@ -15,6 +15,12 @@ export const signIn = async ({ email, password }: SignInCredentials) => {
     });
 
     if (error) {
+      // Check specifically for the email not confirmed error
+      if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
+        toast.error('Your email has not been confirmed. Please check your inbox or contact an administrator.');
+        return { user: null, error, emailNotConfirmed: true };
+      }
+      
       toast.error(error.message);
       return { user: null, error };
     }
