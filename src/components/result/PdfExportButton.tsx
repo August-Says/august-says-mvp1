@@ -33,9 +33,9 @@ const PdfExportButton = ({ contentRef }: PdfExportButtonProps) => {
     
     // Create logo image
     const logoImg = document.createElement('img');
-    logoImg.src = '/your-logo.png'; // Replace with your actual logo path
-    logoImg.style.maxHeight = '60px';
-    logoImg.alt = 'Company Logo';
+    logoImg.src = '/lovable-uploads/88f0766a-a7d4-4c0a-a3f7-64fe15baa48e.png'; // Agency of Impact logo
+    logoImg.style.maxHeight = '80px';
+    logoImg.alt = 'Agency of Impact Logo';
     
     // Append logo and content to container
     logoContainer.appendChild(logoImg);

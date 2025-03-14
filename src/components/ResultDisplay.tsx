@@ -32,6 +32,14 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         </div>
       </div>
       
+      <div className="text-center mb-8">
+        <img 
+          src="/lovable-uploads/88f0766a-a7d4-4c0a-a3f7-64fe15baa48e.png" 
+          alt="Agency of Impact Logo" 
+          className="mx-auto h-16 md:h-20"
+        />
+      </div>
+      
       <ContentDisplay 
         sections={processedSections} 
         formatSectionTitle={formatSectionTitle}
