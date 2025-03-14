@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useWebhookSubmission } from '@/hooks/useWebhookSubmission';
@@ -107,12 +106,10 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     }
   };
 
-  // For debugging - check if we have data that can be parsed
   const hasValidData = () => {
     if (!lastRawResponse) return false;
     try {
       const sections = processContent(lastRawResponse);
-      console.log("Processed sections:", sections);
       return sections.length > 0;
     } catch (e) {
       console.error("Error processing content:", e);
@@ -124,11 +121,9 @@ Potential challenges and mitigation strategies to ensure campaign resilience and
     return <LoadingContent />;
   }
   
-  // Use the raw response directly if it's JSON and can be parsed into sections
   const shouldUseRawResponse = !result && lastRawResponse && hasValidData();
   
   if (result || shouldUseRawResponse) {
-    // Use lastRawResponse directly if result is empty but we have raw response data
     const displayContent = shouldUseRawResponse ? lastRawResponse : result;
     
     return (
