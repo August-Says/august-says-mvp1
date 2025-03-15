@@ -21,8 +21,12 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   // Game image examples for the Questions section
   const gameImages: GameImage[] = [
     {
-      path: 'lovable-uploads/9e8ce792-da11-4a52-8b78-6535033bb057.png',
-      caption: 'Sample game visualization showing question options'
+      path: 'lovable-uploads/3f289358-79d3-4274-be0c-fcde9f3ad825.png',
+      caption: 'Game matrix selection with numbered options'
+    },
+    {
+      path: 'lovable-uploads/34186f24-cba1-42fd-b052-0fbe61cbcac0.png',
+      caption: 'Question slider with emotional response options'
     }
   ];
   
