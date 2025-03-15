@@ -1,3 +1,4 @@
+
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -17,15 +18,11 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   const processedSections = processContent(result);
   const [showRawJson, setShowRawJson] = useState(false);
   
-  // Game image examples that will be displayed in the Questions section
+  // Game image examples for the Questions section
   const gameImages: GameImage[] = [
     {
       path: 'lovable-uploads/9e8ce792-da11-4a52-8b78-6535033bb057.png',
       caption: 'Sample game visualization showing question options'
-    },
-    {
-      path: 'lovable-uploads/9e8ce792-da11-4a52-8b78-6535033bb057.png',
-      caption: 'Sample visualization of a survey question format'
     }
   ];
   
