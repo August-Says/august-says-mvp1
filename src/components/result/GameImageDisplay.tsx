@@ -2,13 +2,19 @@
 import React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
+import { GameImage as GameImageType } from '@/utils/contentProcessing/types';
 
 interface GameImageProps {
   imagePath: string;
   altText?: string;
+  isDefault?: boolean;
 }
 
-export const GameImage: React.FC<GameImageProps> = ({ imagePath, altText = "Game visualization" }) => {
+export const GameImage: React.FC<GameImageProps> = ({ 
+  imagePath, 
+  altText = "Game visualization",
+  isDefault = false
+}) => {
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
@@ -80,11 +86,15 @@ export const GameImage: React.FC<GameImageProps> = ({ imagePath, altText = "Game
 };
 
 interface GameImageDisplayProps {
-  images: Array<{path: string, caption?: string}>;
+  images: GameImageType[];
+  defaultImages?: GameImageType[];
 }
 
-export const GameImageDisplay: React.FC<GameImageDisplayProps> = ({ images }) => {
-  if (!images || images.length === 0) {
+export const GameImageDisplay: React.FC<GameImageDisplayProps> = ({ images, defaultImages = [] }) => {
+  // Combine default images with provided images if there are no provided images
+  const displayImages = images.length > 0 ? images : defaultImages;
+  
+  if (!displayImages || displayImages.length === 0) {
     return null;
   }
 
@@ -92,11 +102,12 @@ export const GameImageDisplay: React.FC<GameImageDisplayProps> = ({ images }) =>
     <div className="space-y-6 my-6">
       <h4 className="text-lg font-medium text-white/90">Game Visualizations</h4>
       <div className="space-y-8">
-        {images.map((image, index) => (
+        {displayImages.map((image, index) => (
           <GameImage 
             key={index} 
             imagePath={image.path} 
             altText={image.caption} 
+            isDefault={images.length === 0}
           />
         ))}
       </div>

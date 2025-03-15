@@ -6,6 +6,7 @@ import PdfExportButton from '@/components/result/PdfExportButton';
 import ShareButton from '@/components/result/ShareButton';
 import ContentDisplay from '@/components/result/ContentDisplay';
 import { processContent, formatSectionTitle } from '@/components/result/ContentParser';
+import { GameImage } from '@/utils/contentProcessing/types';
 
 interface ResultDisplayProps {
   result: string;
@@ -17,12 +18,15 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   const processedSections = processContent(result);
   const [showRawJson, setShowRawJson] = useState(false);
   
-  // Sample game images - in a real implementation, these would come from Supabase
-  // or the webhook response data
-  const sampleGameImages = [
+  // Game image examples that will be displayed in the Questions section
+  const gameImages: GameImage[] = [
     {
-      path: 'sample_game_image_1.png',
+      path: 'sample_question_image1.png',
       caption: 'Sample game visualization showing question options'
+    },
+    {
+      path: 'sample_question_image2.png',
+      caption: 'Sample visualization of a survey question format'
     }
   ];
   
@@ -53,7 +57,7 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         sections={processedSections} 
         formatSectionTitle={formatSectionTitle}
         contentRef={contentRef}
-        gameImages={sampleGameImages}
+        gameImages={gameImages}
       />
       
       <div className="mt-8 pt-4 border-t border-white/10 flex justify-between items-center">

@@ -3,12 +3,25 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { MarkdownContentRenderer } from '../markdown/MarkdownContentRenderer';
 import { GameImageDisplay } from '../GameImageDisplay';
+import { GameImage } from '@/utils/contentProcessing/types';
+
+// Default game images to show in the Questions section
+const DEFAULT_GAME_IMAGES: GameImage[] = [
+  {
+    path: 'sample_question_image1.png',
+    caption: 'Example multiple choice question visualization'
+  },
+  {
+    path: 'sample_question_image2.png',
+    caption: 'Example survey question visualization'
+  }
+];
 
 interface SectionProps {
   title: string;
   content: string;
   index: number;
-  gameImages?: Array<{path: string, caption?: string}>;
+  gameImages?: GameImage[];
 }
 
 export const SectionRenderer: React.FC<SectionProps> = ({ title, content, index, gameImages }) => {
@@ -27,8 +40,11 @@ export const SectionRenderer: React.FC<SectionProps> = ({ title, content, index,
         <MarkdownContentRenderer content={content} />
       </div>
       
-      {isQuestionsSection && gameImages && gameImages.length > 0 && (
-        <GameImageDisplay images={gameImages} />
+      {isQuestionsSection && (
+        <GameImageDisplay 
+          images={gameImages || []} 
+          defaultImages={DEFAULT_GAME_IMAGES}
+        />
       )}
     </motion.div>
   );
