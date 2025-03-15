@@ -19,16 +19,14 @@ export const GameImage: React.FC<GameImageProps> = ({ imagePath, altText = "Game
         setIsLoading(true);
         
         // Get public URL for the image from Supabase storage
-        const { data, error } = await supabase.storage
+        const { data } = await supabase.storage
           .from('game_images')
           .getPublicUrl(imagePath);
         
-        if (error) {
-          throw error;
-        }
-        
         if (data?.publicUrl) {
           setImageUrl(data.publicUrl);
+        } else {
+          throw new Error('No public URL returned');
         }
       } catch (err: any) {
         console.error('Error fetching game image:', err);
