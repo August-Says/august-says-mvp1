@@ -7,17 +7,15 @@ interface ContentDisplayProps {
   sections: Section[];
   formatSectionTitle: (title: string) => string;
   contentRef: React.RefObject<HTMLDivElement>;
-  gameImages?: Array<{path: string, caption?: string}>;
 }
 
-const ContentDisplay = ({ sections, formatSectionTitle, contentRef, gameImages = [] }: ContentDisplayProps) => {
+const ContentDisplay = ({ sections, formatSectionTitle, contentRef }: ContentDisplayProps) => {
   return (
     <div ref={contentRef} className="space-y-8 text-white pdf-content">
       {sections.length > 0 ? (
         sections.map((section, index) => {
           const title = formatSectionTitle(section.title);
           const content = section.content.trim();
-          const isQuestionsSection = title.toLowerCase() === 'questions';
           
           return (
             <SectionRenderer 
@@ -25,7 +23,6 @@ const ContentDisplay = ({ sections, formatSectionTitle, contentRef, gameImages =
               title={title}
               content={content}
               index={index}
-              gameImages={isQuestionsSection ? gameImages : undefined}
             />
           );
         })

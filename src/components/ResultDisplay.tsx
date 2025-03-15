@@ -6,7 +6,6 @@ import PdfExportButton from '@/components/result/PdfExportButton';
 import ShareButton from '@/components/result/ShareButton';
 import ContentDisplay from '@/components/result/ContentDisplay';
 import { processContent, formatSectionTitle } from '@/components/result/ContentParser';
-import { GameImage } from '@/utils/contentProcessing/types';
 
 interface ResultDisplayProps {
   result: string;
@@ -17,18 +16,6 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const processedSections = processContent(result);
   const [showRawJson, setShowRawJson] = useState(false);
-  
-  // Game image examples for the Questions section
-  const gameImages: GameImage[] = [
-    {
-      path: 'lovable-uploads/3f289358-79d3-4274-be0c-fcde9f3ad825.png',
-      caption: 'Game matrix selection with numbered options'
-    },
-    {
-      path: 'lovable-uploads/34186f24-cba1-42fd-b052-0fbe61cbcac0.png',
-      caption: 'Question slider with emotional response options'
-    }
-  ];
   
   return (
     <motion.div 
@@ -57,7 +44,6 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
         sections={processedSections} 
         formatSectionTitle={formatSectionTitle}
         contentRef={contentRef}
-        gameImages={gameImages}
       />
       
       <div className="mt-8 pt-4 border-t border-white/10 flex justify-between items-center">
