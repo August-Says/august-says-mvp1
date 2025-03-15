@@ -8,11 +8,11 @@ import { GameImage } from '@/utils/contentProcessing/types';
 // Default game images to show in the Questions section
 const DEFAULT_GAME_IMAGES: GameImage[] = [
   {
-    path: 'sample_question_image1.png',
+    path: 'lovable-uploads/5289f4ef-bd9b-4e73-a6df-58d8bad8bdca.png',
     caption: 'Example multiple choice question visualization'
   },
   {
-    path: 'sample_question_image2.png',
+    path: 'lovable-uploads/5289f4ef-bd9b-4e73-a6df-58d8bad8bdca.png',
     caption: 'Example survey question visualization'
   }
 ];
@@ -44,6 +44,7 @@ export const SectionRenderer: React.FC<SectionProps> = ({ title, content, index,
         <GameImageDisplay 
           images={gameImages || []} 
           defaultImages={DEFAULT_GAME_IMAGES}
+          useLocalImages={true}
         />
       )}
     </motion.div>

@@ -3,17 +3,20 @@ import React from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import { GameImage as GameImageType } from '@/utils/contentProcessing/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface GameImageProps {
   imagePath: string;
   altText?: string;
   isDefault?: boolean;
+  isLocalImage?: boolean;
 }
 
 export const GameImage: React.FC<GameImageProps> = ({ 
   imagePath, 
   altText = "Game visualization",
-  isDefault = false
+  isDefault = false,
+  isLocalImage = false
 }) => {
   const [imageUrl, setImageUrl] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
@@ -24,15 +27,20 @@ export const GameImage: React.FC<GameImageProps> = ({
       try {
         setIsLoading(true);
         
-        // Get public URL for the image from Supabase storage
-        const { data } = await supabase.storage
-          .from('game_images')
-          .getPublicUrl(imagePath);
-        
-        if (data?.publicUrl) {
-          setImageUrl(data.publicUrl);
+        if (isLocalImage) {
+          // Use the local image path directly
+          setImageUrl(`/${imagePath}`);
         } else {
-          throw new Error('No public URL returned');
+          // Get public URL for the image from Supabase storage
+          const { data } = await supabase.storage
+            .from('game_images')
+            .getPublicUrl(imagePath);
+          
+          if (data?.publicUrl) {
+            setImageUrl(data.publicUrl);
+          } else {
+            throw new Error('No public URL returned');
+          }
         }
       } catch (err: any) {
         console.error('Error fetching game image:', err);
@@ -45,13 +53,11 @@ export const GameImage: React.FC<GameImageProps> = ({
     if (imagePath) {
       fetchImage();
     }
-  }, [imagePath]);
+  }, [imagePath, isLocalImage]);
 
   if (isLoading) {
     return (
-      <div className="w-full h-40 bg-white/5 rounded-lg animate-pulse flex items-center justify-center">
-        <p className="text-white/50">Loading image...</p>
-      </div>
+      <Skeleton className="w-full h-40 bg-white/5 rounded-lg" />
     );
   }
 
@@ -88,9 +94,14 @@ export const GameImage: React.FC<GameImageProps> = ({
 interface GameImageDisplayProps {
   images: GameImageType[];
   defaultImages?: GameImageType[];
+  useLocalImages?: boolean;
 }
 
-export const GameImageDisplay: React.FC<GameImageDisplayProps> = ({ images, defaultImages = [] }) => {
+export const GameImageDisplay: React.FC<GameImageDisplayProps> = ({ 
+  images, 
+  defaultImages = [],
+  useLocalImages = false
+}) => {
   // Combine default images with provided images if there are no provided images
   const displayImages = images.length > 0 ? images : defaultImages;
   
@@ -108,6 +119,7 @@ export const GameImageDisplay: React.FC<GameImageDisplayProps> = ({ images, defa
             imagePath={image.path} 
             altText={image.caption} 
             isDefault={images.length === 0}
+            isLocalImage={useLocalImages}
           />
         ))}
       </div>

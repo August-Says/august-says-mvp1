@@ -21,11 +21,11 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   // Game image examples that will be displayed in the Questions section
   const gameImages: GameImage[] = [
     {
-      path: 'sample_question_image1.png',
+      path: 'lovable-uploads/5289f4ef-bd9b-4e73-a6df-58d8bad8bdca.png',
       caption: 'Sample game visualization showing question options'
     },
     {
-      path: 'sample_question_image2.png',
+      path: 'lovable-uploads/5289f4ef-bd9b-4e73-a6df-58d8bad8bdca.png',
       caption: 'Sample visualization of a survey question format'
     }
   ];
