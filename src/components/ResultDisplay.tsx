@@ -1,4 +1,3 @@
-
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -21,11 +20,11 @@ const ResultDisplay = ({ result, onBack }: ResultDisplayProps) => {
   // Game image examples that will be displayed in the Questions section
   const gameImages: GameImage[] = [
     {
-      path: 'lovable-uploads/5289f4ef-bd9b-4e73-a6df-58d8bad8bdca.png',
+      path: 'lovable-uploads/9e8ce792-da11-4a52-8b78-6535033bb057.png',
       caption: 'Sample game visualization showing question options'
     },
     {
-      path: 'lovable-uploads/5289f4ef-bd9b-4e73-a6df-58d8bad8bdca.png',
+      path: 'lovable-uploads/9e8ce792-da11-4a52-8b78-6535033bb057.png',
       caption: 'Sample visualization of a survey question format'
     }
   ];

@@ -28,8 +28,9 @@ export const GameImage: React.FC<GameImageProps> = ({
         setIsLoading(true);
         
         if (isLocalImage) {
-          // Use the local image path directly
-          setImageUrl(`/${imagePath}`);
+          // For local images, use the path directly without adding a slash
+          // This ensures the path is treated relative to the public directory
+          setImageUrl(imagePath);
         } else {
           // Get public URL for the image from Supabase storage
           const { data } = await supabase.storage
