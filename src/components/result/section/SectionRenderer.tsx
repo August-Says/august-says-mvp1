@@ -2,14 +2,18 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { MarkdownContentRenderer } from '../markdown/MarkdownContentRenderer';
+import { GameImageDisplay } from '../GameImageDisplay';
 
 interface SectionProps {
   title: string;
   content: string;
   index: number;
+  gameImages?: Array<{path: string, caption?: string}>;
 }
 
-export const SectionRenderer: React.FC<SectionProps> = ({ title, content, index }) => {
+export const SectionRenderer: React.FC<SectionProps> = ({ title, content, index, gameImages }) => {
+  const isQuestionsSection = title.toLowerCase() === 'questions';
+  
   return (
     <motion.div 
       key={index}
@@ -22,6 +26,10 @@ export const SectionRenderer: React.FC<SectionProps> = ({ title, content, index 
       <div className="text-white/80 prose prose-sm prose-invert max-w-none">
         <MarkdownContentRenderer content={content} />
       </div>
+      
+      {isQuestionsSection && gameImages && gameImages.length > 0 && (
+        <GameImageDisplay images={gameImages} />
+      )}
     </motion.div>
   );
 };
