@@ -45,3 +45,22 @@ export const signOut = async () => {
     return { error };
   }
 };
+
+export const resetPassword = async (email: string) => {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    
+    if (error) {
+      toast.error(error.message);
+      return { error };
+    }
+    
+    toast.success('Password reset email sent! Please check your inbox.');
+    return { error: null };
+  } catch (error: any) {
+    toast.error('An unexpected error occurred during password reset');
+    return { error };
+  }
+};
